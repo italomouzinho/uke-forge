@@ -1,48 +1,86 @@
-# UkeForge — Baritone Ukulele Chord Builder
-![UkeForge Hero Image Placeholder](https://via.placeholder.com/1000x350/1a1710/e8b860?text=UkeForge+Baritone+DGBE)
+UkeForge — Baritone Ukulele Atelier
 
-Interactive tool specifically tailored for baritone ukulele players. Build chord progressions, visualize fretboard diagrams, learn linear fingering patterns, and transpose songs to your voice.
+An interactive tool specifically tailored for baritone ukulele players. Build chord progressions, visualise fretboard diagrams, experiment with unknown shapes, learn linear fingering patterns, and transpose songs to your voice.
 
-🔗 **[Live Demo: Play UkeForge Here](https://italomouzinho.github.io/uke-forge)**
+🔗 Live Demo: Play UkeForge Here
 
----
+🎼 The Baritone Methodology (Linear Tetrachordal Logic)
 
-## 🎼 The Baritone Methodology (Linear Tetrachordal Logic)
-Unlike soprano or tenor ukuleles which commonly utilize re-entrant (High G) tuning, the baritone operates strictly on **Linear G-Tuning (D3, G3, B3, E4)**. 
+Unlike soprano or tenor ukuleles which commonly utilise re-entrant (High G) tuning, the baritone operates strictly on Linear G-Tuning (D3, G3, B3, E4).
 
-Because the baritone lacks the 5th and 6th strings of a standard guitar, translating dense Western chromatic harmony onto a rigid four-string matrix requires advanced algorithmic compression. Our chord library utilizes "linear tetrachordal logic," which programmatically discards acoustically redundant intervals (like perfect fifths) or sacrifices root notes in advanced voicings to preserve harmonic weight and guide tones.
+Because the baritone lacks the 5th and 6th strings of a standard guitar, translating dense Western chromatic harmony onto a rigid four-string matrix requires advanced algorithmic compression. Our chord library utilises "linear tetrachordal logic," which programmatically discards acoustically redundant intervals (like perfect fifths) or sacrifices root notes in advanced voicings to preserve harmonic weight and guide tones.
 
-## ✨ Features
+✨ Features & Tabs
 
-* **Chord Builder** — Pick a root key + mode (minor/major/blues) → select a preset progression or build custom Roman numerals → see mathematically correct fretboard diagrams + scale tones.
-* **Linear Fingering Patterns** — High-fidelity SVG visualizer mapping PIMA (Thumb/Index/Middle/Ring) patterns onto a horizontal string timeline. Learn techniques like the Travis pick, arpeggio sweeps, and pinch pulses.
-* **Song Transposer** — Paste chords + lyrics → shift by semitone → auto-fit to bass/baritone/tenor vocal ranges.
-* **Zero dependencies** — Pure HTML + CSS + Vanilla JS. Entirely client-side and lightning fast.
+Chord Builder: Pick a root key + mode (minor/major/blues) → select a preset progression or build custom Roman numerals → see mathematically correct fretboard diagrams + scale tones.
 
-## 🚀 Quick Start
+Experimentation Laboratory: Click directly on an interactive SVG fretboard to place your fingers. The real-time analyser instantly identifies the chord name, root, and quality, then suggests harmonisations to seamlessly send back to your Builder.
 
-**Online**
-Simply open `index.html` directly in your browser — it works entirely offline.
+Linear Fingering Patterns: High-fidelity SVG visualiser mapping PIMA (Thumb/Index/Middle/Ring) patterns onto a horizontal string timeline. Learn techniques like the Travis pick, arpeggio sweeps, and pinch pulses.
 
-**Local Dev Server**
-```bash
+Advanced Transposer: Paste chords + lyrics (or a direct URL from Ultimate Guitar/CifraClub) → shift by semitone → auto-fit to bass/baritone/tenor vocal ranges.
+
+🚀 Quick Start
+
+Online
+Simply open index.html directly in your browser — it works entirely offline with zero dependencies.
+
+Local Dev Server
+
 # Python 3
 python3 -m http.server 8000
+
 # Node
 npx http-server
+
 # Then visit http://localhost:8000
 
-📖 How to Use
-Chords Tab
 
-Root key — Select A–B (12 keys).
+🎨 Customisation
 
-Mode — Minor, Major, or Blues.
+Add a Chord
 
-Progression — Pick a preset or paste custom Roman numerals (e.g., i iv V7 i).
+Edit the VX object in the <script> tag.
+Note: UkeForge uses a High-to-Low internal vector mapping (E-B-G-D) to match scientific acoustic mapping.
 
-Output — Fretboard diagrams for each chord + highlighted scale tone strip.
+const VX = {
+  // Array maps to [High E, B, G, Low D].
+  // 0 = open string, null = muted, 1+ = fret number
+  'Cmaj7': [[0, 0, 0, 2]], 
+  'G':     [[3, 0, 0, 0]]  
+};
 
+
+Add a Progression Preset
+
+Edit the PRESETS object for the desired mode (e.g., PRESETS.minor):
+
+PRESETS.minor.push({
+  l: 'My progression', 
+  d: ['i', 'VII', 'VI', 'III']
+});
+
+
+📋 File Structure
+
+uke-forge/
+├── index.html       # Self-contained app (all HTML/CSS/JS)
+├── README.md        # This file
+└── .gitignore
+
+
+🎯 Tech Stack
+
+No build tools: Pure vanilla JS, CSS Grid, and native SVG fretboard diagrams.
+
+No database: 100% client-side and lightning fast.
+
+Fonts: DM Serif Display + DM Mono.
+
+📄 License
+
+MIT — Use freely, modify, redistribute.
+Tuning: D · G · B · E (baritone, steel strings)
 Patterns Tab
 
 Fingering techniques with beat-by-beat PIMA layouts mapping perfectly to the DGBE layout:
