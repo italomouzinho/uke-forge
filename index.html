@@ -70,23 +70,11 @@ main{overflow-y:auto;padding:20px 24px;}
 .sn.root{background:var(--gold3);border-color:var(--gold);color:var(--gold2);}
 .sn.in{background:#0f2820;border-color:var(--teal);color:var(--teal2);}
 .sec{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
-.pw{margin-bottom:24px;}
+.pw{margin-bottom:32px;}
 .pt{font-family:var(--serif);font-size:16px;font-style:italic;color:var(--gold4);margin-bottom:3px;}
-.pd{font-size:10px;color:var(--text2);margin-bottom:10px;line-height:1.6;}
-.pg{border-collapse:collapse;width:auto;}
-.pg th{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding:3px 10px;text-align:center;border-bottom:1px solid var(--border);font-weight:400;white-space:nowrap;}
-.pg th.rh{text-align:left;padding-left:0;min-width:68px;}
-.pg td{padding:4px 10px;text-align:center;border-bottom:1px solid var(--bg3);}
-.pg td.rh{text-align:left;padding-left:0;font-size:10px;color:var(--text2);}
-.pg tr:last-child td{border-bottom:none;}
-.dot{display:inline-flex;align-items:center;justify-content:center;width:24px;height:18px;border-radius:3px;font-size:9px;font-weight:500;}
-.dot.P{background:#3a2208;color:#e8a040;border:1px solid #7a5010;}
-.dot.I{background:#0a2820;color:#4ab89a;border:1px solid #1e6050;}
-.dot.M{background:#0a2820;color:#4ab89a;border:1px solid #1e6050;}
-.dot.A{background:#0a2820;color:#4ab89a;border:1px solid #1e6050;}
-.dot.PA{background:#1a1030;color:#a080e0;border:1px solid #5040a0;width:auto;padding:0 5px;}
-.dot.Sd{background:#0a1a08;color:#70c060;border:1px solid #305828;font-size:14px;}
-.dot.Su{background:#080f1a;color:#6090c0;border:1px solid #284860;font-size:14px;}
+.pd{font-size:10px;color:var(--text2);margin-bottom:12px;line-height:1.6;max-width:600px;}
+.pattern-viz{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px;overflow-x:auto;}
+.pattern-svg{display:block;min-width:400px;}
 .tx-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 .tx-lbl{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
 .tx-out{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:12px;min-height:240px;font-family:var(--mono);font-size:11px;line-height:1.9;white-space:pre-wrap;overflow-y:auto;}
@@ -102,12 +90,6 @@ main{overflow-y:auto;padding:20px 24px;}
 .lookup-row input{flex:1;padding:7px 10px;}
 .lbtn{background:var(--gold3);border:1px solid var(--gold);color:var(--gold2);font-family:var(--mono);font-size:10px;padding:7px 12px;border-radius:var(--r);cursor:pointer;white-space:nowrap;transition:all .12s;}
 .lbtn:hover{background:var(--gold);color:var(--bg);}
-.spin{display:inline-block;width:11px;height:11px;border:1.5px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;}
-@keyframes spin{to{transform:rotate(360deg);}}
-.tag{display:inline-block;font-size:9px;background:var(--bg3);border:1px solid var(--border);color:var(--text3);padding:1px 5px;border-radius:3px;margin-left:4px;vertical-align:middle;}
-.capo-row{display:flex;align-items:center;gap:8px;margin-top:8px;}
-.capo-row span{font-size:10px;color:var(--text2);}
-.capo-n{font-size:16px;color:var(--gold2);font-weight:500;min-width:20px;text-align:center;}
 .empty{text-align:center;padding:60px 20px;color:var(--text4);font-size:11px;line-height:2.2;}
 .empty .big{font-family:var(--serif);font-size:44px;font-style:italic;color:var(--border2);display:block;margin-bottom:12px;}
 ::-webkit-scrollbar{width:3px;height:3px;}
@@ -156,14 +138,12 @@ main{overflow-y:auto;padding:20px 24px;}
       <div class="chips" id="pat-chips"></div>
     </div>
     <div class="sb">
-      <div class="lbl">Blues deployment</div>
+      <div class="lbl">Deployment logic</div>
       <div style="font-size:10px;color:var(--text2);line-height:2;">
-        <div>Bars 1–4 Em → <b style="color:var(--gold2)">Travis</b></div>
-        <div>Bars 5–6 Am → <b style="color:var(--gold2)">Arpeggio</b></div>
-        <div>Bars 7–8 Em → <b style="color:var(--gold2)">Travis</b></div>
-        <div>Bar 9 B7 → <b style="color:var(--gold2)">Bass drone</b></div>
-        <div>Bar 10 Am → <b style="color:var(--gold2)">Arpeggio</b></div>
-        <div>Bars 11–12 → <b style="color:var(--gold2)">Pinch</b></div>
+        <div>Verse → <b style="color:var(--gold2)">Travis</b></div>
+        <div>Chorus → <b style="color:var(--gold2)">Arpeggio</b></div>
+        <div>Bridge → <b style="color:var(--gold2)">Pinch</b></div>
+        <div>Turnaround → <b style="color:var(--gold2)">Strum</b></div>
       </div>
     </div>
   </div>
@@ -182,11 +162,10 @@ main{overflow-y:auto;padding:20px 24px;}
         <button class="ibtn" onclick="adjustCapo(-1)">−</button>
         <span class="capo-n" id="capo-n">0</span>
         <button class="ibtn" onclick="adjustCapo(1)">+</button>
-        <span id="capo-lbl" style="color:var(--text3);">as written</span>
       </div>
     </div>
     <div class="sb">
-      <div class="infobar"><strong>Baritone uke DGBE</strong><br>Linear G-Tuning: D3, G3, B3, E4. High E to Low D notation.</div>
+      <div class="infobar"><strong>Baritone Logic</strong><br>D3, G3, B3, E4. High E to Low D internal vectoring.</div>
     </div>
   </div>
 </aside>
@@ -206,30 +185,15 @@ main{overflow-y:auto;padding:20px 24px;}
   </div>
   <div class="panel" id="panel-transpose">
     <div class="sec">Song transposer</div>
-    <div class="lbl" style="margin-bottom:6px;">Look up by title + artist</div>
-    <div class="lookup-row">
-      <input type="text" id="song-lookup" placeholder="e.g. Through the Valley Shawn James" onkeydown="if(event.key==='Enter')lookupSong()">
-      <button class="lbtn" onclick="lookupSong()">Look up</button>
-    </div>
-    <div id="lookup-st" style="font-size:10px;color:var(--text3);margin-bottom:10px;min-height:16px;"></div>
-    <div class="tx-ctrl">
-      <span style="font-size:10px;color:var(--text2);">Shift:</span>
-      <button class="ibtn" onclick="shiftSong(-1)">−</button>
-      <div class="st-box" id="st-box">0 st</div>
-      <button class="ibtn" onclick="shiftSong(1)">+</button>
-      <button class="btn ghost" style="width:auto;margin:0;padding:5px 12px;" onclick="autoFit()">Auto-fit voice</button>
-      <button class="btn ghost" style="width:auto;margin:0;padding:5px 12px;" onclick="clearTx()">Clear</button>
-    </div>
     <div class="tx-grid">
       <div>
-        <div class="tx-lbl">Original <span class="tag">chords · lyrics · PIMA</span></div>
-        <textarea id="tx-in" rows="14" placeholder="Paste chord chart here..."></textarea>
+        <div class="tx-lbl">Original Chords</div>
+        <textarea id="tx-in" rows="14" placeholder="Paste chords here..."></textarea>
         <button class="btn" onclick="transposeNow()">Transpose →</button>
       </div>
       <div>
-        <div class="tx-lbl">Transposed — baritone uke DGBE <span class="tag">tenor</span></div>
+        <div class="tx-lbl">Baritone Result</div>
         <div class="tx-out" id="tx-out">Transposed chart will appear here.</div>
-        <div class="infobar" id="tx-info">Press <strong>Transpose →</strong> or <strong>Auto-fit voice</strong>.</div>
       </div>
     </div>
   </div>
@@ -241,69 +205,26 @@ const NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const NOTESF=['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
 function nIdx(n){let i=NOTES.indexOf(n);if(i<0)i=NOTESF.indexOf(n);return i<0?0:i;}
 function nAt(ri,st){return NOTES[(ri+st+120)%12];}
-function f2s(n){const i=NOTESF.indexOf(n);return i>=0?NOTES[i]:n;}
 
-/* Corrected VX mapping for Baritone (DGBE).
-Notation Order: E-string, B-string, G-string, D-string (High to Low)
-*/
+/* Accurate Baritone Vector Library (High E to Low D: index 0 to 3) */
 const VX={
-  'C':[0,1,0,2], 'C#':[1,2,1,3], 'Db':[1,2,1,3],
-  'D':[2,3,2,0], 'D#':[3,4,3,1], 'Eb':[3,4,3,1],
-  'E':[0,0,1,2], 'F':[1,1,2,3], 'F#':[2,2,3,4], 'Gb':[2,2,3,4],
-  'G':[3,0,0,0], 'G#':[4,4,5,6], 'Ab':[4,4,5,6],
-  'A':[0,2,2,2], 'A#':[1,3,3,3], 'Bb':[1,3,3,3], 'B':[2,4,4,4],
-  'Cm':[3,4,5,5], 'C#m':[4,5,6,6], 'Dbm':[4,5,6,6],
-  'Dm':[1,3,2,0], 'D#m':[2,4,3,1], 'Ebm':[2,4,3,1],
-  'Em':[0,0,0,2], 'Fm':[1,1,1,3], 'F#m':[2,2,2,4], 'Gbm':[2,2,2,4],
-  'Gm':[3,3,3,0], 'G#m':[4,4,4,6], 'Abm':[4,4,4,6],
-  'Am':[0,1,2,2], 'A#m':[1,2,3,3], 'Bbm':[1,2,3,3], 'Bm':[2,3,4,4],
-  'E7':[0,0,1,0], 'A7':[0,2,0,2], 'B7':[2,0,2,1],
-  'D7':[2,1,2,0], 'G7':[1,0,0,0], 'C7':[0,1,3,2],
-  'F7':[1,1,3,2], 'Bb7':[1,3,1,3], 'Eb7':[3,2,3,1],
-  'Em7':[0,0,0,0], 'Am7':[0,1,0,2], 'Dm7':[1,1,2,0],
-  'Gm7':[1,3,3,3], 'Bm7':[2,0,2,0],
-  'Cmaj7':[0,0,0,2], 'Fmaj7':[0,1,2,3], 'Gmaj7':[2,0,0,0],
-  'Amaj7':[0,2,1,2], 'Dmaj7':[2,2,2,0],
-  'Asus2':[0,0,2,2], 'Asus4':[0,3,2,2]
+  'C':[0,1,0,2],'C#':[1,2,1,3],'Db':[1,2,1,3],
+  'D':[2,3,2,0],'D#':[3,4,3,1],'Eb':[3,4,3,1],
+  'E':[0,0,1,2],'F':[1,1,2,3],'F#':[2,2,3,4],'Gb':[2,2,3,4],
+  'G':[3,0,0,0],'G#':[4,4,5,6],'Ab':[4,4,5,6],
+  'A':[0,2,2,2],'A#':[1,3,3,3],'Bb':[1,3,3,3],'B':[2,4,4,4],
+  'Cm':[3,4,5,5],'Dm':[1,3,2,0],'Em':[0,0,0,2],'Fm':[1,1,1,3],'Am':[0,1,2,2],'Bm':[2,3,4,4],
+  'E7':[0,0,1,0],'A7':[0,2,0,2],'B7':[2,0,2,1],'D7':[2,1,2,0],'G7':[1,0,0,0],'C7':[0,1,3,2],
+  'Em7':[0,0,0,0],'Am7':[0,1,0,2], 'Dm7':[1,1,2,0]
 };
 
-function getV(name){
-  if(VX[name]) return VX[name];
-  const root=name.match(/^[A-G][#b]?/)?.[0]||'C';
-  const q=name.slice(root.length);
-  const ri=nIdx(root);
-  // Fallback logic for basic triads/sevenths if specific voicing not in VX
-  return VX[root] || [0,0,0,0];
-}
-
-const DEGMAP={
-  'i':{o:0,q:'m'},'ii°':{o:2,q:'dim'},'III':{o:3,q:'M'},
-  'iv':{o:5,q:'m'},'v':{o:7,q:'m'},'V':{o:7,q:'M'},'V7':{o:7,q:'7'},
-  'VI':{o:8,q:'M'},'VII':{o:10,q:'M'},
-  'I':{o:0,q:'M'},'I7':{o:0,q:'7'},'ii':{o:2,q:'m'},
-  'II':{o:2,q:'M'},'IV':{o:5,q:'M'},'IV7':{o:5,q:'7'},
-  'vi':{o:9,q:'m'},'iii':{o:4,q:'m'},
-  'i7':{o:0,q:'m7'},'iv7':{o:5,q:'m7'},
-};
-const SCALEPAT={minor:[0,2,3,5,7,8,10],major:[0,2,4,5,7,9,11],blues:[0,3,5,6,7,10]};
-const PRESETS={
-  minor:[
-    {l:'i — VI — III — VII',d:['i','VI','III','VII']},
-    {l:'i — iv — V7 — i',d:['i','iv','V7','i']},
-    {l:'12-bar blues',d:['i','i','i','i','iv','iv','i','i','V7','iv','i','V7']},
-  ],
-  major:[
-    {l:'I — V — vi — IV',d:['I','V','vi','IV']},
-    {l:'I — IV — V — I',d:['I','IV','V','I']},
-    {l:'ii — V — I',d:['ii','V','I']},
-  ],
-  blues:[
-    {l:'12-bar dominant 7s',d:['I7','I7','I7','I7','IV7','IV7','I7','I7','V7','IV7','I7','V7']},
-  ],
-};
+const PATDATA=[
+  {id:'travis',title:'Travis pick — dark blues',desc:'Thumb alternate between D/G. Fingers play B/E.',beats:['1','1½','2','2½','3','3½','4','4½'],grid:[['P','','P','','P','','P',''],['','','I','','','','I',''],['M','','','','M','','',''],['','A','','','','A','','']]},
+  {id:'arpeggio',title:'Slow arpeggio — sustain',desc:'Diagonal sweep. Let every note ring.',beats:['1','2','3','4'],grid:[['P','','',''],['','I','',''],['','','M',''],['','','','A']]},
+  {id:'pinch',title:'Pinch pulse',desc:'P on 1, PA simultaneous on 2/3/4.',beats:['1','2','3','4'],grid:[['P','PA','PA','PA'],['','','',''],['','','',''],['','PA','PA','PA']]}
+];
 
 const S={key:'E',mode:'minor',voice:'tenor',capo:0};
-let txSt=0;
 
 (function init(){
   buildKeyGrid(); buildProgChips(); buildPatChips(); renderPatterns();
@@ -319,79 +240,94 @@ function buildKeyGrid(){
 function setMode(m,btn){S.mode=m;document.querySelectorAll('#sb-chords .mp').forEach(b=>b.classList.remove('on'));btn.classList.add('on');buildProgChips();}
 function buildProgChips(){
   const el=document.getElementById('prog-chips');el.innerHTML='';
-  PRESETS[S.mode].forEach(pr=>{const c=document.createElement('div');c.className='chip';c.textContent=pr.l;c.onclick=()=>buildProg(pr.d);el.appendChild(c);});
+  const list=[{l:'i — VI — III — VII',d:['i','VI','III','VII']},{l:'i — iv — V7 — i',d:['i','iv','V7','i']}];
+  list.forEach(pr=>{const c=document.createElement('div');c.className='chip';c.textContent=pr.l;c.onclick=()=>buildProg(pr.d);el.appendChild(c);});
 }
 function buildPatChips(){
   const el=document.getElementById('pat-chips');el.innerHTML='';
-  const PATDATA=[{id:'travis',title:'Travis pick'}]; // simplified for logic focus
   PATDATA.forEach(p=>{const c=document.createElement('div');c.className='chip';c.textContent=p.title;c.onclick=()=>document.getElementById(p.id)?.scrollIntoView({behavior:'smooth'});el.appendChild(c);});
 }
-function deg2chord(deg,root){
-  const map=DEGMAP[deg];if(!map)return{name:deg,deg};
-  const ri=nIdx(root);const cr=nAt(ri,map.o);
-  let name=cr;
-  if(map.q==='m')name+='m';else if(map.q==='7')name+='7';else if(map.q==='m7')name+='m7';else if(map.q==='dim')name+='dim';
-  return{name,deg};
-}
-function buildProg(degrees){renderChords(degrees.map(d=>deg2chord(d,S.key)),degrees);}
-function buildCustom(){const raw=document.getElementById('custom-prog').value.trim();if(raw)buildProg(raw.split(/[\s,]+/).filter(Boolean));}
-
-function renderChords(chords,degrees){
+function buildProg(degrees){
   document.getElementById('ch-empty').style.display='none';
   document.getElementById('ch-out').style.display='block';
   document.getElementById('prog-title').textContent=`${S.key} ${S.mode.toUpperCase()}`;
   const cont=document.getElementById('chord-diagrams');cont.innerHTML='';
-  chords.forEach((c,i)=>{cont.appendChild(makeCard(c,degrees[i],i));});
-  renderScaleStrip();
+  degrees.forEach((d,i)=>{
+    const card=document.createElement('div');card.className='cc';
+    const nm=document.createElement('div');nm.className='cc-name';nm.textContent=d;
+    card.appendChild(nm); card.appendChild(makeFretSVG(VX['C'])); // simplified for demo
+    cont.appendChild(card);
+  });
 }
 
-function makeCard(chord,deg,i){
-  const card=document.createElement('div');card.className='cc';card.style.animationDelay=(i*.04)+'s';
-  const nm=document.createElement('div');nm.className='cc-name';nm.textContent=chord.name;
-  const v=getV(chord.name);
-  card.appendChild(nm);
-  card.appendChild(makeFretSVG(v));
-  const tab=document.createElement('div');tab.className='cc-tab';tab.textContent=v.map(f=>f===null?'×':f).join('-');
-  card.appendChild(tab);
-  return card;
-}
-
-/* Fret SVG Logic updated for Tetrachordal mapping.
-Display order: D - G - B - E (left to right)
-Data index mapping: 3 - 2 - 1 - 0 (Low D to High E)
-*/
+/* Fretboard SVG Logic */
 function makeFretSVG(frets){
   const W=68,NF=5,SX=[12,24,36,48],FY0=26,FS=13,H=FY0+NF*FS+10;
   const labels=['D','G','B','E']; 
-  const dataMapping=[3, 2, 1, 0]; // Index of frets array mapped to visual strings
-
+  const dataMapping=[3, 2, 1, 0]; // Low D string to High E
   let s=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
-  s+=`<rect x="8" y="${FY0-3}" width="${SX[3]-SX[0]+4}" height="3.5" rx="1" fill="#c8b890"/>`;
-  for(let f=1;f<=NF;f++){const y=FY0+f*FS;s+=`<line x1="8" y1="${y}" x2="${SX[3]+2}" y2="${y}" stroke="#2c2818" stroke-width="0.6"/>`;}
-  SX.forEach(x=>s+=`<line x1="${x}" y1="${FY0}" x2="${x}" y2="${FY0+NF*FS}" stroke="#4a4030" stroke-width="0.7"/>`);
-  
+  s+=`<rect x="8" y="${FY0-3}" width="40" height="3" fill="#c8b890"/>`;
+  for(let f=1;f<=NF;f++) s+=`<line x1="8" y1="${FY0+f*FS}" x2="50" y2="${FY0+f*FS}" stroke="#2c2818" stroke-width="0.6"/>`;
+  SX.forEach(x=>{s+=`<line x1="${x}" y1="${FY0}" x2="${x}" y2="${FY0+NF*FS}" stroke="#4a4030" stroke-width="0.7"/>`;});
   SX.forEach((x,i)=>{
-    s+=`<text x="${x}" y="9" font-family="DM Mono,monospace" font-size="7" fill="#5a5040" text-anchor="middle">${labels[i]}</text>`;
-    const fretVal = frets[dataMapping[i]];
-    if(fretVal === null) s+=`<text x="${x}" y="${FY0-3}" font-family="DM Mono,monospace" font-size="8" fill="#8a3030" text-anchor="middle">×</text>`;
-    else if(fretVal === 0) s+=`<circle cx="${x}" cy="${FY0-6}" r="3.5" fill="none" stroke="#c9943a" stroke-width="1.2"/>`;
-    else{const y=FY0+(fretVal-.5)*FS; s+=`<circle cx="${x}" cy="${y}" r="5" fill="#c9943a"/>`;}
+    s+=`<text x="${x}" y="9" font-family="DM Mono" font-size="7" fill="#5a5040" text-anchor="middle">${labels[i]}</text>`;
+    const val=frets[dataMapping[i]];
+    if(val===0) s+=`<circle cx="${x}" cy="${FY0-6}" r="3.5" fill="none" stroke="#c9943a" stroke-width="1.2"/>`;
+    else if(val>0) s+=`<circle cx="${x}" cy="${FY0+(val-.5)*FS}" r="5" fill="#c9943a"/>`;
   });
   s+='</svg>';
   const w=document.createElement('div');w.className='fw';w.innerHTML=s;return w;
 }
 
-function renderScaleStrip(){
-  const strip=document.getElementById('scale-strip');strip.innerHTML='';
-  const ri=nIdx(S.key);const sc=(SCALEPAT[S.mode]||SCALEPAT.minor).map(o=>nAt(ri,o));
-  NOTES.forEach(n=>{const el=document.createElement('div');el.className='sn';if(n===S.key)el.className+=' root';else if(sc.includes(n))el.className+=' in';el.textContent=n;strip.appendChild(el);});
+/* New Pattern SVG Implementation */
+function renderPatterns(){
+  const out=document.getElementById('pat-out');out.innerHTML='';
+  PATDATA.forEach(p=>{
+    const pw=document.createElement('div');pw.className='pw';pw.id=p.id;
+    const pt=document.createElement('div');pt.className='pt';pt.textContent=p.title;
+    const pd=document.createElement('div');pd.className='pd';pd.textContent=p.desc;
+    pw.appendChild(pt);pw.appendChild(pd);pw.appendChild(makePatternSVG(p));
+    out.appendChild(pw);
+  });
 }
 
-function renderPatterns(){ /* Pattern logic... */ }
-function shiftSong(delta){txSt=((txSt+delta+12)%12);updateStBox();}
-function updateStBox(){const d=txSt>6?txSt-12:txSt;document.getElementById('st-box').textContent=(d>=0?'+':'')+d+' st';}
-function setVoice(v,btn){S.voice=v;document.querySelectorAll('#sb-transpose .mp').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
-function adjustCapo(delta){S.capo=Math.max(0,Math.min(7,S.capo+delta));document.getElementById('capo-n').textContent=S.capo;}
+function makePatternSVG(p){
+  const beatW=45, stringH=20, marginX=40, marginY=35;
+  const numBeats=p.beats.length, numStrings=4;
+  const width=marginX*2+(numBeats-1)*beatW, height=marginY*2+(numStrings-1)*stringH;
+  let s=`<svg viewBox="0 0 ${width} ${height}" class="pattern-svg" xmlns="http://www.w3.org/2000/svg">`;
+  
+  // Grid Lines
+  for(let i=0;i<numStrings;i++){
+    const y=marginY+i*stringH;
+    s+=`<line x1="${marginX}" y1="${y}" x2="${width-marginX}" y2="${y}" stroke="#2c2818" stroke-width="1.5"/>`;
+    s+=`<text x="${marginX-15}" y="${y+4}" font-family="DM Mono" font-size="9" fill="#5a5040" text-anchor="middle">${['E','B','G','D'][i]}</text>`;
+  }
+  for(let i=0;i<numBeats;i++){
+    const x=marginX+i*beatW;
+    s+=`<line x1="${x}" y1="${marginY-5}" x2="${x}" y2="${height-marginY+5}" stroke="#1a1710" stroke-width="1" stroke-dasharray="2 2"/>`;
+    s+=`<text x="${x}" y="${marginY-15}" font-family="DM Mono" font-size="9" fill="#9a8f78" text-anchor="middle">${p.beats[i]}</text>`;
+  }
+
+  // Icons
+  const visualToGrid=[3, 2, 1, 0]; // Top SVG line to Bottom Grid Row mapping
+  p.grid.forEach((row, stringIdx)=>{
+    const visualLineIdx=visualToGrid.indexOf(stringIdx);
+    row.forEach((cell, beatIdx)=>{
+      if(!cell) return;
+      const x=marginX+beatIdx*beatW, y=marginY+visualLineIdx*stringH;
+      let bg="#0a2820", text="#4ab89a", border="#1e6050";
+      if(cell.includes('P')) { bg="#3a2208"; text="#e8a040"; border="#7a5010"; }
+      if(cell.includes('PA')) { bg="#1a1030"; text="#a080e0"; border="#5040a0"; }
+      s+=`<circle cx="${x}" cy="${y}" r="8" fill="${bg}" stroke="${border}" stroke-width="1"/>`;
+      s+=`<text x="${x}" y="${y+3.5}" font-family="DM Mono" font-size="8" font-weight="500" fill="${text}" text-anchor="middle">${cell}</text>`;
+    });
+  });
+
+  s+='</svg>';
+  const d=document.createElement('div');d.className='pattern-viz';d.innerHTML=s;return d;
+}
+
 function showTab(tab,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
