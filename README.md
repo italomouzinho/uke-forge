@@ -31,3 +31,70 @@ python3 -m http.server 8000
 # Node
 npx http-server
 # Then visit http://localhost:8000
+
+📖 How to Use
+Chords Tab
+
+Root key — Select A–B (12 keys).
+
+Mode — Minor, Major, or Blues.
+
+Progression — Pick a preset or paste custom Roman numerals (e.g., i iv V7 i).
+
+Output — Fretboard diagrams for each chord + highlighted scale tone strip.
+
+Patterns Tab
+
+Fingering techniques with beat-by-beat PIMA layouts mapping perfectly to the DGBE layout:
+
+Travis pick — Percussive, dark blues (thumb alternates every beat).
+
+Arpeggio — Sustain, slow ballads (diagonal sweep).
+
+Pinch pulse — Turnaround, percussive accent.
+
+Transpose Tab
+
+Paste — Drop a chord chart (ChordPro format [Am] or inline chords).
+
+Shift — Use ± buttons (semitone steps) or let the engine auto-fit to your voice.
+
+Song Lookup — (Note: Requires local proxy or injected Anthropic API key during development). Fetches directly from Claude to return KEY, CAPO, and full chart.
+
+🎨 Customization
+Add a Chord
+
+Edit the VX object in the <script> tag.
+Note: UkeForge uses a High-to-Low internal vector mapping (E-B-G-D) to match scientific acoustic mapping.
+
+JavaScript
+const VX = {
+  // Array maps to [High E, B, G, Low D].
+  // 0 = open string, null = muted, 1+ = fret number
+  'Cmaj7': [2, 0, 0, 0], 
+  'G':     [0, 0, 0, 3]  
+};
+Add a Progression Preset
+
+Edit PRESETS[mode] (e.g., PRESETS.minor):
+
+JavaScript
+PRESETS.minor = [
+  {l:'My progression', d:['i','VII','VI','III']},
+];
+📋 File Structure
+Plaintext
+uke-forge/
+├── index.html       # Self-contained app (all HTML/CSS/JS)
+├── README.md        # This file
+└── .gitignore
+🎯 Tech Stack
+No build tools — Pure vanilla JS, CSS Grid, SVG fretboard diagrams.
+
+No database — Client-side only.
+
+Fonts — DM Serif Display + DM Mono.
+
+📄 License
+MIT — Use freely, modify, redistribute.
+Tuning: D · G · B · E (baritone, steel strings)
