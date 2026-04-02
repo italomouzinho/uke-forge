@@ -1,0 +1,12 @@
+# Node modules
+node_modules/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
