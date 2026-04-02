@@ -91,6 +91,17 @@ main{overflow-y:auto;padding:20px 24px;}
 .empty .big{font-family:var(--serif);font-size:44px;font-style:italic;color:var(--border2);display:block;margin-bottom:12px;}
 .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--border2);border-top-color:var(--teal);border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
+/* Experiment Tab Styles */
+.exp-container{display:flex;gap:30px;align-items:flex-start;flex-wrap:wrap;}
+.exp-svg-wrapper{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px;width:180px;flex-shrink:0;}
+.exp-svg{width:100%;height:auto;display:block;}
+.exp-results{flex:1;display:flex;flex-direction:column;gap:16px;min-width:260px;}
+.exp-chord-name{font-family:var(--serif);font-size:38px;color:var(--gold2);font-style:italic;line-height:1.1;}
+.exp-notes-played{font-size:11px;color:var(--teal2);letter-spacing:0.1em;}
+.exp-sugg-card{background:var(--bg3);border:1px solid var(--border);padding:16px;border-radius:8px;animation:fadeIn .3s ease both;}
+.exp-sugg-title{font-size:12px;color:var(--text);margin-bottom:12px;}
+.sugg-prog-btn{display:block;width:100%;text-align:left;background:none;border:1px solid var(--border2);color:var(--text2);padding:10px;border-radius:var(--r);margin-bottom:6px;cursor:pointer;font-family:var(--mono);font-size:11px;transition:all .15s;}
+.sugg-prog-btn:hover{border-color:var(--gold3);color:var(--gold2);background:var(--bg2);}
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
@@ -104,6 +115,7 @@ main{overflow-y:auto;padding:20px 24px;}
   <span style="font-size:10px;color:var(--text3);">baritone · steel strings</span>
   <div class="tabs">
     <button class="tab on" onclick="showTab('chords',this)">Chords</button>
+    <button class="tab" onclick="showTab('experiment',this)">Experiment</button>
     <button class="tab" onclick="showTab('patterns',this)">Patterns</button>
     <button class="tab" onclick="showTab('transpose',this)">Transpose</button>
   </div>
@@ -129,6 +141,15 @@ main{overflow-y:auto;padding:20px 24px;}
       <div class="lbl">Custom (Roman Numerals)</div>
       <textarea id="custom-prog" rows="2" placeholder="e.g. i iv V7 i"></textarea>
       <button class="btn" onclick="buildCustom()">Build / Refresh</button>
+    </div>
+  </div>
+  <div id="sb-experiment" style="display:none">
+    <div class="sb">
+      <div class="lbl">Laboratory Controls</div>
+      <button class="btn ghost" onclick="clearExperiment()">Clear Fretboard</button>
+    </div>
+    <div class="sb">
+      <div class="infobar"><strong>How to use:</strong><br>Click anywhere on the strings to place your fingers. Click above the nut to play an open string. The analyser will identify the chord and suggest harmonisations.</div>
     </div>
   </div>
   <div id="sb-patterns" style="display:none">
@@ -185,6 +206,19 @@ main{overflow-y:auto;padding:20px 24px;}
       <div class="scale-row" id="scale-strip"></div>
     </div>
   </div>
+  <div class="panel" id="panel-experiment">
+    <div class="sec">Interactive Fretboard Laboratory</div>
+    <div class="exp-container">
+      <div class="exp-svg-wrapper" id="exp-fretboard-container"></div>
+      <div class="exp-results">
+        <div>
+            <div class="exp-chord-name" id="exp-chord-name">Awaiting Input</div>
+            <div class="exp-notes-played" id="exp-notes">Notes: —</div>
+        </div>
+        <div id="exp-suggestions-container"></div>
+      </div>
+    </div>
+  </div>
   <div class="panel" id="panel-patterns">
     <div id="pat-out"></div>
   </div>
@@ -225,49 +259,36 @@ const NOTESF=['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
 function nIdx(n){let i=NOTES.indexOf(n);if(i<0)i=NOTESF.indexOf(n);return i<0?0:i;}
 function nAt(ri,st){return NOTES[(ri+st+120)%12];}
 
-/* COMPREHENSIVE BARITONE CHORD LIBRARY (From chord_library.md)
-   Mapped High-to-Low (E, B, G, D) 
-*/
+// --- EXPERIMENTATION LABORATORY ---
+let expFrets = [null, null, null, null]; // Moved up here
+
+/* COMPREHENSIVE BARITONE CHORD LIBRARY (From chord_library.md) */
 const VX = {
-  // A Roots
   'A':[[0,2,2,2]], 'Am':[[0,1,2,2]], 'Aaug':[[1,2,2,3]], 'Adim':[[null,1,2,1]], 'Asus2':[[0,0,2,2]], 'Asus4':[[0,3,2,2]],
   'A7':[[0,2,0,2]], 'Am7':[[0,1,0,2]], 'Amaj7':[[0,2,1,2]], 'Aaug7':[[1,2,0,2]], 'Adim7':[[2,1,2,1]], 'AmMaj7':[[0,1,1,2]],
   'Am7b5':[[3,1,2,1]], 'A9':[[5,2,4,5]], 'Amaj9':[[5,0,6,6]], 'A11':[[3,2,2,0]], 'Am11':[[3,1,2,0]], 'Am6':[[2,1,2,2]], 'Aadd9':[[0,2,4,2]], 'Am9':[[5,0,2,2]],
-  // Bb Roots
   'Bb':[[1,3,3,3]], 'Bbm':[[1,2,3,3]], 'Bbaug':[[2,3,3,4]], 'Bbdim':[[1,2,3,null]], 'Bbsus2':[[1,1,3,3]], 'Bbsus4':[[1,4,3,3]],
   'Bb7':[[1,3,1,3]], 'Bbm7':[[4,2,3,3]], 'Bbmaj7':[[5,3,3,3]], 'Bbdim7':[[3,2,3,2]], 'BbmMaj7':[[1,2,2,3]], 'Bb9':[[1,1,1,0]],
-  // B Roots
   'B':[[2,4,4,4]], 'Bm':[[2,3,4,4]], 'Baug':[[3,4,4,5]], 'Bdim':[[null,3,4,3]], 'Bsus2':[[2,2,4,4]], 'Bsus4':[[2,5,4,4]],
   'B7':[[2,4,2,4]], 'Bm7':[[2,3,2,4]], 'Bmaj7':[[2,4,3,4]], 'Baug7':[[3,4,2,4]], 'Bdim7':[[4,3,4,3]], 'BmMaj7':[[2,3,3,4]], 'B7b5':[[1,0,2,3]], 'B9':[[2,2,2,1]],
-  // C Roots
   'C':[[0,1,0,2]], 'Cm':[[3,4,5,5]], 'Caug':[[0,1,1,2]], 'Cdim':[[2,1,2,4]], 'Csus2':[[3,3,5,5]], 'Csus4':[[3,1,0,3]],
   'C7':[[0,1,3,2]], 'Cm7':[[3,4,3,5]], 'Cmaj7':[[0,0,0,2]], 'Caug7':[[0,1,3,1]], 'Cdim7':[[2,1,2,1]], 'CmMaj7':[[3,4,4,5]], 'Cadd9':[[0,3,0,2]], 'C9':[[0,1,3,0]], 'Cmaj9':[[0,0,0,0]],
-  // Db (C#) Roots
   'Db':[[1,2,1,3]], 'Dbm':[[4,5,6,6]], 'Db7':[[1,2,4,3]], 'Dbm7':[[4,5,4,6]], 'Dbmaj7':[[1,1,1,3]], 'DbmMaj7':[[4,5,5,6]], 'Db9':[[1,2,4,1]],
   'C#':[[1,2,1,3]], 'C#m':[[4,5,6,6]], 'C#7':[[1,2,4,3]], 'C#m7':[[4,5,4,6]], 'C#maj7':[[1,1,1,3]], 'C#mMaj7':[[4,5,5,6]], 'C#9':[[1,2,4,1]],
-  // D Roots
   'D':[[2,3,2,0]], 'Dm':[[1,3,2,0]], 'Daug':[[2,3,3,0]], 'Ddim':[[1,0,1,0]], 'Dsus2':[[0,3,2,0]], 'Dsus4':[[3,3,2,0]],
   'D7':[[2,1,2,0]], 'Dm7':[[1,1,2,0]], 'Dmaj7':[[2,2,2,0]], 'Daug7':[[2,3,5,3]], 'Ddim7':[[1,0,1,0]], 'DmMaj7':[[1,2,2,0]], 'D9':[[0,1,2,0]], 'Dmaj9':[[0,2,2,0]], 'D11':[[0,1,0,0]], 'Dadd9':[[0,3,2,4]],
-  // Eb Roots
   'Eb':[[3,4,3,1]], 'Ebm':[[2,4,3,1]], 'Ebaug':[[3,4,4,5]], 'Ebdim':[[2,1,2,1]], 'Ebsus2':[[1,4,3,1]], 'Ebsus4':[[4,4,3,1]],
   'Eb7':[[3,2,3,1]], 'Ebm7':[[2,2,3,1]], 'Ebmaj7':[[3,3,3,1]], 'Ebdim7':[[2,1,2,1]], 'EbmMaj7':[[2,3,3,1]], 'Eb9':[[1,2,3,1]],
-  // E Roots
   'E':[[0,0,1,2]], 'Em':[[0,0,0,2]], 'Eaug':[[0,1,1,2]], 'Edim':[[0,2,3,2]], 'Esus2':[[2,0,4,2]], 'Esus4':[[0,0,2,2]],
   'E7':[[0,0,1,0]], 'Em7':[[0,0,0,0]], 'Emaj7':[[0,0,1,1]], 'Eaug7':[[0,1,1,0]], 'Edim7':[[3,2,3,2]], 'EmMaj7':[[0,0,0,1]], 'Em7b5':[[3,3,3,2]], 'E9':[[2,0,1,2]], 'Emaj9':[[2,0,1,1]], 'Eadd9':[[2,0,1,4]],
-  // F Roots
   'F':[[1,1,2,3]], 'Fm':[[1,1,1,3]], 'Faug':[[1,2,2,3]], 'Fdim':[[1,0,1,3]], 'Fsus2':[[3,1,0,3]], 'Fsus4':[[1,1,3,3]],
   'F7':[[1,1,3,2]], 'Fm7':[[1,1,1,1]], 'Fmaj7':[[0,1,2,3]], 'Faug7':[[1,2,4,3]], 'Fdim7':[[1,0,1,0]], 'FmMaj7':[[0,1,1,3]], 'Fm7b5':[[4,4,4,3]], 'F9':[[3,1,2,3]], 'Fmaj9':[[3,1,2,2]], 'F11':[[1,1,3,1]],
-  // Gb (F#) Roots
   'Gb':[[2,2,3,4]], 'Gbm':[[2,2,2,4]], 'Gb7':[[2,2,4,3]], 'Gbm7':[[2,2,2,2]], 'Gbmaj7':[[1,2,3,4]], 'GbmMaj7':[[1,2,2,4]], 'Gb9':[[4,2,3,4]],
   'F#':[[2,2,3,4]], 'F#m':[[2,2,2,4]], 'F#7':[[2,2,4,3]], 'F#m7':[[2,2,2,2]], 'F#maj7':[[1,2,3,4]], 'F#mMaj7':[[1,2,2,4]], 'F#9':[[4,2,3,4]],
-  // G Roots
   'G':[[3,0,0,0]], 'Gm':[[3,3,3,0]], 'Gaug':[[3,0,0,1]], 'Gdim':[[null,null,0,0]], 'Gsus2':[[3,3,0,0]], 'Gsus4':[[3,1,0,0]],
   'G7':[[1,0,0,0]], 'Gm7':[[1,3,3,3]], 'Gmaj7':[[2,0,0,0]], 'Gaug7':[[1,0,0,1]], 'Gdim7':[[0,2,3,2]], 'GmMaj7':[[2,3,3,0]], 'Gm7b5':[[3,2,3,3]], 'G9':[[1,0,2,0]], 'Gmaj9':[[2,0,2,0]], 'G11':[[1,1,0,0]], 'Gm11':[[3,1,3,3]],
-  // Ab (G#) Roots
   'Ab':[[4,4,5,6]], 'Abm':[[4,4,4,6]], 'Ab7':[[4,4,5,4]], 'Abm7':[[4,4,4,4]], 'Abmaj7':[[8,8,8,6]], 'AbmMaj7':[[3,4,4,6]], 'Abm7b5':[[2,3,4,4]], 'Ab9':[[3,1,1,1]], 'Abmaj9':[[2,4,1,1]],
   'G#':[[4,4,5,6]], 'G#m':[[4,4,4,6]], 'G#7':[[4,4,5,4]], 'G#m7':[[4,4,4,4]], 'G#maj7':[[8,8,8,6]], 'G#mMaj7':[[3,4,4,6]], 'G#m7b5':[[2,3,4,4]], 'G#9':[[3,1,1,1]], 'G#maj9':[[2,4,1,1]],
-  
-  // Slash Chords
   'D/G':[[3,3,2,4]], 'D/B':[[2,0,2,0]], 'Dm/B':[[5,3,4,3]], 'E/F':[[1,0,1,2]], 'Gb/E':[[2,3,1,1]], 'Ab/Gb':[[4,4,5,4]], 'Gb/G':[[3,2,3,4]], 'Ab/G':[[3,1,1,1]], 'B/G':[[2,0,0,1]], 'G/A':[[7,8,7,7]], 'Ebdim/Db':[[2,2,2,1]], 'Fdim/Eb':[[1,0,1,1]], 'Em/A':[[3,0,2,2]], 'Gm/E':[[3,3,3,2]], 'Csus4/Bb':[[3,1,0,1]]
 };
 
@@ -317,7 +338,7 @@ let activeInversions = [];
 let txSt = 0; 
 
 (function init(){
-  buildKeyGrid(); buildProgChips(); buildPatChips(); renderPatterns();
+  buildKeyGrid(); buildProgChips(); buildPatChips(); renderPatterns(); renderExpFretboard();
 })();
 
 function buildKeyGrid(){
@@ -328,7 +349,7 @@ function buildKeyGrid(){
     p.onclick=()=>{
         S.key=n;
         buildKeyGrid();
-        buildCustom(); // AUTO REFRESH
+        buildCustom();
     };
     g.appendChild(p);
   });
@@ -338,7 +359,7 @@ function setMode(m,btn){
     document.querySelectorAll('#sb-chords .mp').forEach(b=>b.classList.remove('on'));
     btn.classList.add('on');
     buildProgChips();
-    buildCustom(); // AUTO REFRESH
+    buildCustom();
 }
 function buildProgChips(){
   const el=document.getElementById('prog-chips');el.innerHTML='';
@@ -412,7 +433,7 @@ function renderScaleStrip(){
 function makeFretSVG(frets){
   const W=68,NF=5,SX=[12,24,36,48],FY0=26,FS=13,H=FY0+NF*FS+10;
   const labels=['D','G','B','E']; 
-  const dataMapping=[3, 2, 1, 0]; // Low D to High E logic
+  const dataMapping=[3, 2, 1, 0]; 
   const nz=frets.filter(f=>f!=null&&f>0);
   const minF=nz.length?Math.min(...nz):0;
   const startF=minF>1?minF-1:0;
@@ -476,7 +497,6 @@ function shiftSong(delta){ txSt = ((txSt + delta + 12) % 12); document.getElemen
 function clearTx(){ document.getElementById('tx-in').value = ''; document.getElementById('tx-out').innerHTML = 'Empty.'; txSt = 0; document.getElementById('st-box').textContent = '0 st'; }
 function autoFit(){ shiftSong(-2); }
 
-// Expanded Regex to catch library chord qualities (maj9, mMaj7, add9, etc.)
 const chordRegex = /\b([CDEFGAB][#b]?)(m|M|maj|dim|aug|sus2|sus4|add9|ø|°)?(7M|maj7|M7|m7|7|6|9|11|13|m7b5|mMaj7)?(\/[CDEFGAB][#b]?)?(?:\s|$|(?=[)\]]))/g;
 
 function transposeChordMatch(match) {
@@ -528,6 +548,182 @@ async function transposeNow() {
     document.getElementById('tx-out').innerHTML = out;
 }
 
+function clearExperiment() {
+    expFrets = [null, null, null, null];
+    renderExpFretboard();
+    analyseExperiment();
+}
+
+function toggleExpFret(stringIdx, fret) {
+    if (expFrets[stringIdx] === fret) {
+        expFrets[stringIdx] = null; // Toggle off
+    } else {
+        expFrets[stringIdx] = fret; // Toggle on
+    }
+    renderExpFretboard();
+    analyseExperiment();
+}
+
+function renderExpFretboard() {
+    const W = 140, H = 340, NF = 12;
+    const sX = [20, 53, 86, 120]; // D, G, B, E layout
+    const vMap = [3, 2, 1, 0]; // Map visual layout to logical E,B,G,D array
+    const fY = [];
+    for(let i=0; i<=NF; i++) fY.push(25 + (i * 24));
+    
+    let html = `<svg viewBox="0 0 ${W} ${H}" class="exp-svg" xmlns="http://www.w3.org/2000/svg">`;
+    html += `<rect x="10" y="${fY[0]-8}" width="120" height="8" fill="#c8b890" rx="2"/>`;
+    
+    for(let i=1; i<=NF; i++) {
+        html += `<line x1="10" y1="${fY[i]}" x2="130" y2="${fY[i]}" stroke="#2c2818" stroke-width="1"/>`;
+        if([3,5,7,9,12].includes(i)) {
+            html += `<circle cx="70" cy="${fY[i]-12}" r="3" fill="#2c2818" opacity="0.5"/>`;
+        }
+    }
+    
+    sX.forEach((x, i) => {
+        html += `<line x1="${x}" y1="${fY[0]}" x2="${x}" y2="${fY[NF]}" stroke="#4a4030" stroke-width="1.5"/>`;
+        html += `<text x="${x}" y="10" font-family="DM Mono" font-size="10" fill="#5a5040" text-anchor="middle">${['D','G','B','E'][i]}</text>`;
+    });
+
+    // Interaction Overlays & Markers
+    for(let s=0; s<4; s++) {
+        const vIdx = vMap[s];
+        for(let f=0; f<=NF; f++) {
+            const isSel = expFrets[vIdx] === f;
+            const cy = f === 0 ? fY[0] - 16 : fY[f] - 12;
+            
+            if (isSel) {
+                if (f === 0) html += `<circle cx="${sX[s]}" cy="${cy}" r="6" fill="none" stroke="#c9943a" stroke-width="2"/>`;
+                else html += `<circle cx="${sX[s]}" cy="${cy}" r="8" fill="#c9943a"/>`;
+            }
+            
+            const rectY = f === 0 ? 0 : fY[f-1];
+            const rectH = f === 0 ? 25 : 24;
+            html += `<rect x="${sX[s]-15}" y="${rectY}" width="30" height="${rectH}" fill="transparent" cursor="pointer" onclick="toggleExpFret(${vIdx}, ${f})"/>`;
+        }
+    }
+    html += `</svg>`;
+    document.getElementById('exp-fretboard-container').innerHTML = html;
+}
+
+const CHORD_FORMULAS = [
+    { q: '', iv: [0,4,7], mode: 'major' }, { q: 'm', iv: [0,3,7], mode: 'minor' },
+    { q: '7', iv: [0,4,7,10], mode: 'blues' }, { q: 'maj7', iv: [0,4,7,11], mode: 'major' },
+    { q: 'm7', iv: [0,3,7,10], mode: 'minor' }, { q: 'dim', iv: [0,3,6], mode: 'minor' },
+    { q: 'aug', iv: [0,4,8], mode: 'major' }, { q: 'sus2', iv: [0,2,7], mode: 'major' },
+    { q: 'sus4', iv: [0,5,7], mode: 'major' }, { q: 'm7b5', iv: [0,3,6,10], mode: 'minor' },
+    { q: 'dim7', iv: [0,3,6,9], mode: 'minor' }, { q: '6', iv: [0,4,7,9], mode: 'major' },
+    { q: 'm6', iv: [0,3,7,9], mode: 'minor' }, { q: 'add9', iv: [0,2,4,7], mode: 'major' },
+    { q: 'madd9', iv: [0,2,3,7], mode: 'minor' }, { q: '9', iv: [0,2,4,7,10], mode: 'blues' }
+];
+
+function analyseExperiment() {
+    const PITCH_CLASSES = [4, 11, 7, 2]; // E, B, G, D
+    const BASE_SEMITONES = [14, 9, 5, 0]; // Relative pitch height from D3
+    
+    let active = [];
+    for(let i=0; i<4; i++) {
+        if(expFrets[i] !== null) {
+            active.push({
+                pc: (PITCH_CLASSES[i] + expFrets[i]) % 12,
+                pitch: BASE_SEMITONES[i] + expFrets[i]
+            });
+        }
+    }
+    
+    const nameEl = document.getElementById('exp-chord-name');
+    const notesEl = document.getElementById('exp-notes');
+    const suggCont = document.getElementById('exp-suggestions-container');
+    suggCont.innerHTML = '';
+    
+    if (active.length === 0) {
+        nameEl.textContent = 'Awaiting Input';
+        notesEl.textContent = 'Notes: —';
+        return;
+    }
+    
+    active.sort((a,b) => a.pitch - b.pitch);
+    const bassPC = active[0].pc;
+    const uniquePCs = [...new Set(active.map(n => n.pc))];
+    const noteNames = uniquePCs.map(pc => NOTES[pc]).join(', ');
+    
+    notesEl.textContent = 'Notes: ' + noteNames;
+    
+    if(uniquePCs.length === 1) {
+        nameEl.textContent = NOTES[uniquePCs[0]] + ' Note';
+        return;
+    }
+    if(uniquePCs.length === 2) {
+        const diff = (uniquePCs[1] - uniquePCs[0] + 12) % 12;
+        if (diff === 7) nameEl.textContent = NOTES[uniquePCs[0]] + '5 (Power Chord)';
+        else if (diff === 5) nameEl.textContent = NOTES[uniquePCs[1]] + '5 (Power Chord)';
+        else nameEl.textContent = 'Dyad / Interval';
+        return;
+    }
+    
+    let matches = [];
+    for(let root of uniquePCs) {
+        let intervals = uniquePCs.map(pc => (pc - root + 12) % 12).sort((a,b)=>a-b);
+        let intStr = JSON.stringify(intervals);
+        for(let form of CHORD_FORMULAS) {
+            if(JSON.stringify(form.iv) === intStr) matches.push({ root: root, q: form.q, mode: form.mode });
+        }
+    }
+    
+    // Check 5th-less voicings
+    if (matches.length === 0) {
+        const rootless = [
+            { q: '7', iv: [0,4,10], mode: 'blues' }, { q: 'maj7', iv: [0,4,11], mode: 'major' },
+            { q: 'm7', iv: [0,3,10], mode: 'minor' }, { q: 'mMaj7', iv: [0,3,11], mode: 'minor' }
+        ];
+        for(let root of uniquePCs) {
+            let intervals = uniquePCs.map(pc => (pc - root + 12) % 12).sort((a,b)=>a-b);
+            let intStr = JSON.stringify(intervals);
+            for(let form of rootless) {
+                if(JSON.stringify(form.iv) === intStr) matches.push({ root: root, q: form.q, mode: form.mode });
+            }
+        }
+    }
+    
+    if (matches.length > 0) {
+        const best = matches[0];
+        let cName = NOTES[best.root] + best.q;
+        if (bassPC !== best.root) cName += '/' + NOTES[bassPC];
+        nameEl.textContent = cName;
+        
+        // Populate Suggestions
+        const rName = NOTES[best.root];
+        const modeName = best.mode.charAt(0).toUpperCase() + best.mode.slice(1);
+        let sHtml = `<div class="exp-sugg-card">
+            <div class="exp-sugg-title">Explore <strong>${rName} ${modeName}</strong> Harmonisation:</div>`;
+        
+        PRESETS[best.mode].forEach(pr => {
+            sHtml += `<button class="sugg-prog-btn" onclick="sendExperimentToChords('${rName}', '${best.mode}', '${pr.d.join(' ')}')">Load: ${pr.l}</button>`;
+        });
+        sHtml += `</div>`;
+        suggCont.innerHTML = sHtml;
+    } else {
+        nameEl.textContent = 'Unknown Cluster';
+    }
+}
+
+function sendExperimentToChords(key, mode, progStr) {
+    S.key = key;
+    S.mode = mode;
+    document.getElementById('custom-prog').value = progStr;
+    showTab('chords', document.querySelector('.tabs button:first-child'));
+    
+    document.querySelectorAll('#sb-chords .mp').forEach(b => {
+        b.classList.remove('on');
+        if(b.textContent.toLowerCase() === mode) b.classList.add('on');
+    });
+    
+    buildKeyGrid();
+    buildProgChips();
+    buildCustom();
+}
+
 function renderPatterns(){
   const out=document.getElementById('pat-out');out.innerHTML='';
   PATDATA.forEach(p=>{
@@ -557,7 +753,16 @@ function makePatternSVG(p){
   });
   s+='</svg>'; const d=document.createElement('div');d.className='pattern-viz';d.innerHTML=s;return d;
 }
-function showTab(tab,btn){ document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on')); document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on')); document.getElementById('panel-'+tab).classList.add('on'); btn.classList.add('on'); ['chords','patterns','transpose'].forEach(t=>{const el=document.getElementById('sb-'+t);if(el)el.style.display=t===tab?'block':'none';}); }
+function showTab(tab,btn){ 
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on')); 
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on')); 
+    document.getElementById('panel-'+tab).classList.add('on'); 
+    btn.classList.add('on'); 
+    ['chords','experiment','patterns','transpose'].forEach(t=>{
+        const el=document.getElementById('sb-'+t);
+        if(el)el.style.display=t===tab?'block':'none';
+    }); 
+}
 </script>
 </body>
 </html>
