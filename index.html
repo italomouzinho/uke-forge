@@ -105,6 +105,82 @@ main{overflow-y:auto;padding:20px 24px;}
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+/* Pattern section */
+.pw{margin-bottom:30px;}
+.pt{font-family:var(--serif);font-size:18px;color:var(--gold2);font-style:italic;margin-bottom:4px;}
+.pd{font-size:10px;color:var(--text3);margin-bottom:14px;}
+.capo-row{display:flex;align-items:center;gap:8px;margin-top:8px;}
+.capo-n{font-size:14px;color:var(--gold2);min-width:20px;text-align:center;}
+/* Mobile UI elements — hidden on desktop */
+.sb-toggle{display:none;background:none;border:1px solid var(--border2);color:var(--text2);width:34px;height:34px;border-radius:var(--r);cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;margin-left:auto;}
+.sb-toggle:hover{border-color:var(--gold3);color:var(--gold2);}
+.sb-toggle.active{background:var(--gold3);border-color:var(--gold);color:var(--gold2);}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:150;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);}
+.sb-overlay.on{display:block;}
+.bottom-nav{display:none;}
+/* ── Mobile breakpoint ── */
+@media(max-width:768px){
+  /* Layout */
+  .app{grid-template-rows:48px 1fr;}
+  .body{grid-template-columns:1fr;}
+  /* Header */
+  header{padding:0 14px;gap:10px;}
+  header>span{display:none;}
+  .tuning{font-size:9px;padding:2px 6px;}
+  .tabs{display:none;}
+  .sb-toggle{display:flex;}
+  /* Sidebar → slide-up drawer */
+  aside{
+    position:fixed;left:0;right:0;bottom:60px;bottom:calc(60px + env(safe-area-inset-bottom));
+    height:72vh;
+    z-index:200;
+    border-top:1px solid var(--border2);
+    border-right:none;
+    border-radius:16px 16px 0 0;
+    transform:translateY(110%);
+    transition:transform .32s cubic-bezier(.32,.72,0,1);
+  }
+  aside::before{
+    content:'';display:block;
+    width:36px;height:4px;
+    background:var(--border2);border-radius:2px;
+    margin:12px auto 4px;flex-shrink:0;
+  }
+  aside.open{transform:translateY(0);}
+  /* Bottom nav */
+  .bottom-nav{
+    display:flex;
+    position:fixed;bottom:0;left:0;right:0;
+    height:calc(60px + env(safe-area-inset-bottom));
+    padding-bottom:env(safe-area-inset-bottom);
+    background:var(--bg2);
+    border-top:1px solid var(--border);
+    z-index:100;
+    align-items:stretch;
+  }
+  .bottom-nav::before{content:'';position:absolute;top:-1px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold3),transparent);}
+  .bnav-btn{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    background:none;border:none;
+    color:var(--text3);font-family:var(--mono);font-size:8px;letter-spacing:.06em;text-transform:uppercase;
+    cursor:pointer;transition:color .15s;padding:8px 4px 0;
+  }
+  .bnav-btn svg{opacity:.45;transition:opacity .15s;}
+  .bnav-btn.on{color:var(--gold2);}
+  .bnav-btn.on svg{opacity:1;}
+  /* Main */
+  main{padding:16px 16px calc(76px + env(safe-area-inset-bottom));}
+  /* Experiment panel */
+  .exp-container{gap:16px;}
+  .exp-svg-wrapper{width:100%;max-width:100%;}
+  .exp-results{min-width:0;width:100%;}
+  .exp-chord-name{font-size:26px;}
+  /* Transpose panel */
+  .tx-grid{grid-template-columns:1fr;}
+  .tx-out{min-height:160px;}
+  /* Chord cards */
+  .chord-row{gap:8px;}
+}
 </style>
 </head>
 <body>
@@ -114,11 +190,16 @@ main{overflow-y:auto;padding:20px 24px;}
   <div class="tuning">D · G · B · E</div>
   <span style="font-size:10px;color:var(--text3);">baritone · steel strings</span>
   <div class="tabs">
-    <button class="tab on" onclick="showTab('chords',this)">Chords</button>
-    <button class="tab" onclick="showTab('experiment',this)">Experiment</button>
-    <button class="tab" onclick="showTab('patterns',this)">Patterns</button>
-    <button class="tab" onclick="showTab('transpose',this)">Transpose</button>
+    <button class="tab on" data-tab="chords" onclick="showTab('chords',this)">Chords</button>
+    <button class="tab" data-tab="experiment" onclick="showTab('experiment',this)">Experiment</button>
+    <button class="tab" data-tab="patterns" onclick="showTab('patterns',this)">Patterns</button>
+    <button class="tab" data-tab="transpose" onclick="showTab('transpose',this)">Transpose</button>
   </div>
+  <button class="sb-toggle" onclick="toggleSidebar()" aria-label="Controls">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
 </header>
 <div class="body">
 <aside>
@@ -253,6 +334,39 @@ B               E
 </main>
 </div>
 </div>
+<!-- Mobile: sidebar overlay -->
+<div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+<!-- Mobile: bottom navigation -->
+<nav class="bottom-nav">
+  <button class="bnav-btn on" data-tab="chords" onclick="showTab('chords',this)">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <rect x="3" y="5" width="5" height="7" rx="1"/><rect x="9.5" y="5" width="5" height="7" rx="1"/><rect x="16" y="5" width="5" height="7" rx="1"/>
+      <line x1="3" y1="16" x2="21" y2="16"/><line x1="3" y1="19" x2="21" y2="19"/>
+    </svg>
+    <span>Chords</span>
+  </button>
+  <button class="bnav-btn" data-tab="experiment" onclick="showTab('experiment',this)">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <path d="M9 3v8L3 20h18L15 11V3"/><line x1="9" y1="3" x2="15" y2="3"/>
+      <circle cx="8" cy="17" r="1" fill="currentColor"/><circle cx="13" cy="15" r="1" fill="currentColor"/>
+    </svg>
+    <span>Explore</span>
+  </button>
+  <button class="bnav-btn" data-tab="patterns" onclick="showTab('patterns',this)">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+      <line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/>
+      <line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>
+    </svg>
+    <span>Patterns</span>
+  </button>
+  <button class="bnav-btn" data-tab="transpose" onclick="showTab('transpose',this)">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <path d="M7 16V4m0 0L3 8m4-4 4 4"/><path d="M17 8v12m0 0 4-4m-4 4-4-4"/>
+    </svg>
+    <span>Transpose</span>
+  </button>
+</nav>
 <script>
 const NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const NOTESF=['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
@@ -712,7 +826,7 @@ function sendExperimentToChords(key, mode, progStr) {
     S.key = key;
     S.mode = mode;
     document.getElementById('custom-prog').value = progStr;
-    showTab('chords', document.querySelector('.tabs button:first-child'));
+    showTab('chords', null);
     
     document.querySelectorAll('#sb-chords .mp').forEach(b => {
         b.classList.remove('on');
@@ -753,15 +867,37 @@ function makePatternSVG(p){
   });
   s+='</svg>'; const d=document.createElement('div');d.className='pattern-viz';d.innerHTML=s;return d;
 }
-function showTab(tab,btn){ 
-    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on')); 
-    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on')); 
-    document.getElementById('panel-'+tab).classList.add('on'); 
-    btn.classList.add('on'); 
+function toggleSidebar(){
+    const aside=document.querySelector('aside');
+    const overlay=document.getElementById('sb-overlay');
+    const toggle=document.querySelector('.sb-toggle');
+    if(aside.classList.contains('open')){
+        aside.classList.remove('open');
+        overlay.classList.remove('on');
+        toggle.classList.remove('active');
+    } else {
+        aside.classList.add('open');
+        overlay.classList.add('on');
+        toggle.classList.add('active');
+    }
+}
+function closeSidebar(){
+    document.querySelector('aside').classList.remove('open');
+    const overlay=document.getElementById('sb-overlay');
+    if(overlay) overlay.classList.remove('on');
+    const toggle=document.querySelector('.sb-toggle');
+    if(toggle) toggle.classList.remove('active');
+}
+function showTab(tab,btn){
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+    document.querySelectorAll('.tab,.bnav-btn').forEach(b=>b.classList.remove('on'));
+    document.getElementById('panel-'+tab).classList.add('on');
+    document.querySelectorAll(`[data-tab="${tab}"]`).forEach(b=>b.classList.add('on'));
     ['chords','experiment','patterns','transpose'].forEach(t=>{
         const el=document.getElementById('sb-'+t);
         if(el)el.style.display=t===tab?'block':'none';
-    }); 
+    });
+    closeSidebar();
 }
 </script>
 </body>
