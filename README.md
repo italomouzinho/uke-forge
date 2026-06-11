@@ -7,7 +7,7 @@ Interactive tool for baritone ukulele players. Build chord progressions, visuali
 - **Chord Builder** — Pick key + mode (minor/major/blues) → select preset progression or custom Roman numerals → see fretboard diagrams + scale tones
 - **Fingering Patterns** — 6 patterns (Travis pick, arpeggio, drone, pinch, waltz, delta strum) with beat-by-beat PIMA grids
 - **Song Transposer** — Paste chords + lyrics → shift by semitone → auto-fit to bass/baritone/tenor voice + capo suggestions
-- **Responsive UI** — Dark gold/teal theme, works on desktop & tablet
+- **Responsive UI** — Dark gold/teal theme; works on desktop, tablet & phone
 - **Zero dependencies** — Pure HTML + CSS + vanilla JS
 
 ## 🚀 Quick Start
@@ -49,10 +49,10 @@ Fingering techniques with beat-by-beat PIMA (thumb/index/middle/ring) layouts:
 ### Transpose Tab
 1. **Paste** chord chart (ChordPro format `[Am]` or inline chords)
 2. **Shift** — Use ± buttons (semitone steps) or auto-fit to voice
-3. **Capo** — Adjust 0–7 frets
+3. **Capo** — 0–7 frets; output keeps the sounding pitch but shows the shapes to finger with the capo on
 4. **Output** — Transposed chart with chords highlighted
 
-**Song Lookup** — Type "Song Title Artist" → fetches from Anthropic Claude (requires internet). Returns KEY, CAPO, and full chart.
+**Get a chart via AI** — Type "Song Title Artist" → **Copy prompt** puts a ready-made chord-chart request on your clipboard. Paste it into Claude (or any AI chat), then paste the reply into the input box and transpose.
 
 ## 🎨 Customization
 
@@ -101,18 +101,32 @@ Edit `PATDATA`:
 
 ```
 uke-forge/
-├── index.html       # Self-contained app (all HTML/CSS/JS)
+├── index.html        # Self-contained app (all HTML/CSS/JS)
 ├── CHORDS.md         # Canonical chord shape library (source of truth for diagrams)
 ├── Design.md         # "Bespoke Luthier" design system reference
-├── README.md        # This file
+├── test/
+│   └── app.test.js   # Zero-dependency tests (node --test)
+├── README.md         # This file
+├── LICENSE           # MIT
 └── .gitignore
 ```
+
+## 🧪 Tests
+
+No dependencies, no build — just Node's built-in test runner:
+
+```bash
+node --test
+```
+
+The suite extracts the inline `<script>` from `index.html`, runs it in a sandbox, and verifies
+chord-table validity, sharp/flat alias consistency, agreement with `CHORDS.md`, lookup fallbacks,
+and transposition math.
 
 ## 🎯 Tech Stack
 
 - **No build tools** — Pure vanilla JS, CSS Grid, SVG fretboard diagrams
-- **No database** — Client-side only; optional localStorage for user preferences
-- **APIs** — Optional Anthropic Claude for song lookup
+- **No database** — Client-side only; localStorage remembers key, mode, voice, and capo
 - **Fonts** — Newsreader + Manrope (Google Fonts CDN)
 
 ## 🌐 Deployment
@@ -127,7 +141,7 @@ Works anywhere static files are served (Netlify, Vercel, Surge, etc.).
 
 ## 🔮 Roadmap
 
-- [ ] **localStorage** — Save favorite progressions & transpositions
+- [x] **localStorage** — Remember key, mode, voice & capo across visits
 - [ ] **MIDI export** — Send patterns to DAW
 - [ ] **PNG export** — Save fretboard diagrams
 - [ ] **Tuning selector** — Switch between DGBE, standard concert, sopranino
