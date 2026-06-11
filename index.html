@@ -217,10 +217,10 @@ main{overflow-y:auto;padding:28px 32px;}
   </div>
   <div class="panel" id="panel-transpose">
     <div class="sec">Song transposer</div>
-    <div class="lbl" style="margin-bottom:6px;">Look up by title + artist</div>
+    <div class="lbl" style="margin-bottom:6px;">Get a chart via AI</div>
     <div class="lookup-row">
       <input type="text" id="song-lookup" placeholder="e.g. Through the Valley Shawn James" onkeydown="if(event.key==='Enter')lookupSong()">
-      <button class="lbtn" onclick="lookupSong()">Look up</button>
+      <button class="lbtn" onclick="lookupSong()">Copy prompt</button>
     </div>
     <div id="lookup-st" style="font-size:11px;color:var(--on-sd);margin-bottom:10px;min-height:16px;"></div>
     <div class="tx-ctrl">
@@ -446,7 +446,7 @@ function clearTx(){txSt=0;updateStBox();document.getElementById('tx-out').textCo
 function setVoice(v,btn){S.voice=v;document.querySelectorAll('#sb-transpose .mp').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
 const VSHIFT={bass:-3,baritone:0,tenor:2};
 function autoFit(){const shift=VSHIFT[S.voice]||0;txSt=(shift+12)%12;updateStBox();if(document.getElementById('tx-in').value.trim())transposeNow();const d=txSt>6?txSt-12:txSt;document.getElementById('tx-info').innerHTML=`Auto-fit to <strong>${S.voice}</strong>. Shifted <strong>${d>=0?'+':''}${d} st</strong>.`;}
-function adjustCapo(delta){S.capo=Math.max(0,Math.min(7,S.capo+delta));document.getElementById('capo-n').textContent=S.capo;document.getElementById('capo-lbl').textContent=S.capo===0?'as written':'+'+S.capo+' st up';}
+function adjustCapo(delta){S.capo=Math.max(0,Math.min(7,S.capo+delta));document.getElementById('capo-n').textContent=S.capo;document.getElementById('capo-lbl').textContent=S.capo===0?'as written':'play shapes '+S.capo+' st lower';if(document.getElementById('tx-in').value.trim())transposeNow();}
 const CHRE=/\[([A-G][#b]?(?:m(?:aj)?7?|7|dim|aug|sus[24]?|add[29]?|2|4)?)\]/g;
 function txChord(name,st){if(!st)return name;const m=name.match(/^([A-G][#b]?)(.*)/);if(!m)return name;const[,r,suf]=m;return nAt(nIdx(r),st)+suf;}
 function isPima(line){return/^[PIMA\s½\d·\-]+$/.test(line.trim())&&line.trim().length>1;}
@@ -454,32 +454,35 @@ function isChordLine(line){const w=line.trim().split(/\s+/).filter(Boolean);if(!
 function transposeNow(){
   const raw=document.getElementById('tx-in').value;if(!raw.trim())return;
   const out=document.getElementById('tx-out');out.innerHTML='';
+  const playSt=txSt-S.capo;
   raw.split('\n').forEach(line=>{
     const le=document.createElement('div');
     if(isPima(line)){const sp=document.createElement('span');sp.className='tx-pima';sp.textContent=line;le.appendChild(sp);}
     else if(CHRE.test(line)){
       CHRE.lastIndex=0;let last=0,m;
-      while((m=CHRE.exec(line))!==null){if(m.index>last)le.appendChild(document.createTextNode(line.slice(last,m.index)));const sp=document.createElement('span');sp.className='tx-chord';sp.textContent='['+txChord(m[1],txSt)+']';le.appendChild(sp);last=m.index+m[0].length;}
+      while((m=CHRE.exec(line))!==null){if(m.index>last)le.appendChild(document.createTextNode(line.slice(last,m.index)));const sp=document.createElement('span');sp.className='tx-chord';sp.textContent='['+txChord(m[1],playSt)+']';le.appendChild(sp);last=m.index+m[0].length;}
       if(last<line.length)le.appendChild(document.createTextNode(line.slice(last)));
     }else if(isChordLine(line)){
       line.split(/(\b[A-G][#b]?(?:m(?:aj)?7?|7|dim|sus[24]?)?\b)/g).forEach(part=>{
-        if(/^[A-G][#b]?(?:m(?:aj)?7?|7|dim|sus[24]?)?$/.test(part)){const sp=document.createElement('span');sp.className='tx-chord';sp.textContent=txChord(part,txSt);le.appendChild(sp);}
+        if(/^[A-G][#b]?(?:m(?:aj)?7?|7|dim|sus[24]?)?$/.test(part)){const sp=document.createElement('span');sp.className='tx-chord';sp.textContent=txChord(part,playSt);le.appendChild(sp);}
         else le.appendChild(document.createTextNode(part));
       });
     }else le.textContent=line;
     out.appendChild(le);
   });
   const d=txSt>6?txSt-12:txSt;
-  document.getElementById('tx-info').innerHTML=`Shifted <strong>${d>=0?'+':''}${d} st</strong>. Chords in <span style="color:var(--primary)">gold</span>, PIMA in <span style="color:var(--secondary)">teal</span>. Capo: <strong>${S.capo||'—'}</strong>.`;
+  let info=`Sounds <strong>${d>=0?'+':''}${d} st</strong> from original.`;
+  if(S.capo>0){
+    const pd=((playSt%12)+12)%12,pdShown=pd>6?pd-12:pd;
+    info+=` With capo on fret <strong>${S.capo}</strong>, play shapes shifted <strong>${pdShown>=0?'+':''}${pdShown} st</strong>.`;
+  }
+  info+=` Chords in <span style="color:var(--primary)">gold</span>, PIMA in <span style="color:var(--secondary)">teal</span>.`;
+  document.getElementById('tx-info').innerHTML=info;
 }
 async function lookupSong(){
   const q=document.getElementById('song-lookup').value.trim();if(!q)return;
   const st=document.getElementById('lookup-st');
-  st.innerHTML='<span class="spin"></span> Looking up chord chart…';st.style.color='var(--on-sd)';
-  try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      model:'claude-sonnet-4-20250514',max_tokens:1000,
-      system:`You are a chord chart assistant for guitarists and uke players. Return ONLY a chord chart — no commentary, no preamble. Format:
+  const prompt=`You are a chord chart assistant for guitarists and uke players. Return ONLY a chord chart — no commentary, no preamble. Format:
 KEY: [key]
 CAPO: [0 or fret number]
 TEMPO: [bpm]
@@ -487,18 +490,16 @@ TEMPO: [bpm]
 [Section Name]
 [Am]Lyric text [F]continues [C]here [G]like this
 
-Use [Chord] notation inline with the lyrics on the same line. Include section labels like [Verse 1], [Chorus], [Bridge]. Provide the standard/most common version. If unsure of exact chords, provide a musically reasonable approximation. Always provide a complete playable chart.`,
-      messages:[{role:'user',content:`Chord chart for: ${q}`}]
-    })});
-    const data=await res.json();
-    const text=data.content?.find(b=>b.type==='text')?.text||'';
-    if(text){
-      document.getElementById('tx-in').value=text;
-      st.textContent='✓ Chart loaded — press Transpose → to apply';st.style.color='var(--secondary)';
-      const km=text.match(/KEY:\s*([A-G][#b]?)/i);
-      if(km){const k=f2s(km[1]);if(NOTES.includes(k)){S.key=k;buildKeyGrid();}}
-    }else{st.textContent='No result — try title + artist name';st.style.color='var(--red2)';}
-  }catch(e){st.textContent='Lookup failed. Paste chart manually.';st.style.color='var(--red2)';}
+Use [Chord] notation inline with the lyrics on the same line. Include section labels like [Verse 1], [Chorus], [Bridge]. Provide the standard/most common version. If unsure of exact chords, provide a musically reasonable approximation. Always provide a complete playable chart.
+
+Chord chart for: ${q}`;
+  try{
+    await navigator.clipboard.writeText(prompt);
+    st.textContent='✓ Prompt copied — paste it into Claude or another AI chat, then paste the reply into the box below';st.style.color='var(--secondary)';
+  }catch(e){
+    document.getElementById('tx-in').value=prompt;
+    st.textContent='Clipboard unavailable — prompt placed in the box below, copy it from there';st.style.color='var(--red2)';
+  }
 }
 function showTab(tab,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
