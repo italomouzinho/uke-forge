@@ -56,14 +56,19 @@ Fingering techniques with beat-by-beat PIMA (thumb/index/middle/ring) layouts:
 
 ## 🎨 Customization
 
-### Add a Chord
-Edit the `VX` object in `<script>`:
+### Add or Change a Chord
+All chord shapes live in [`CHORDS.md`](./CHORDS.md) — the canonical reference, with both the
+common EBGD (high-to-low string) notation and the app's DGBE (low-to-high) array format.
+The `CHORDS` object in `<script>` is generated directly from that file:
 ```javascript
-const VX={
-  'Cmaj7':[null,0,0,0],  // [D, G, B, E] frets (null = muted)
+const CHORDS={
+  'Cmaj7':[2,4,1,3],  // [D, G, B, E] frets (null = muted)
   // ... existing chords
 };
 ```
+To add a new chord: add a row to `CHORDS.md` with its EBGD notation, convert it (DGBE is just
+EBGD reversed), then add the resulting `[D,G,B,E]` array to `CHORDS` under the chord's name
+(both sharp and flat spellings if relevant, e.g. `'C#m7'` and `'Dbm7'`).
 
 ### Add a Progression Preset
 Edit `PRESETS[mode]` (e.g., `PRESETS.minor`):
@@ -97,6 +102,8 @@ Edit `PATDATA`:
 ```
 uke-forge/
 ├── index.html       # Self-contained app (all HTML/CSS/JS)
+├── CHORDS.md         # Canonical chord shape library (source of truth for diagrams)
+├── Design.md         # "Bespoke Luthier" design system reference
 ├── README.md        # This file
 └── .gitignore
 ```
@@ -106,7 +113,7 @@ uke-forge/
 - **No build tools** — Pure vanilla JS, CSS Grid, SVG fretboard diagrams
 - **No database** — Client-side only; optional localStorage for user preferences
 - **APIs** — Optional Anthropic Claude for song lookup
-- **Fonts** — DM Serif Display + DM Mono (Google Fonts CDN)
+- **Fonts** — Newsreader + Manrope (Google Fonts CDN)
 
 ## 🌐 Deployment
 
