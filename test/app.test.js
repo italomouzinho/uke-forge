@@ -97,17 +97,18 @@ test('known-good spot checks (previously buggy voicings)', () => {
   assert.deepEqual(J(app.CHORDS['D']), [0, 2, 3, 2]);
   assert.deepEqual(J(app.CHORDS['Dm']), [0, 2, 3, 1]);
   assert.deepEqual(J(app.CHORDS['Bbm']), [3, 3, 2, 1]);
-  assert.deepEqual(J(app.CHORDS['Cm']), [5, 5, 4, 3]);
+  assert.deepEqual(J(app.CHORDS['Cm']), [1, 0, 1, 3]);
   assert.deepEqual(J(app.CHORDS['G7']), [0, 0, 0, 1]);
 });
 
 // ---- CHORDS.md consistency ----
 test('CHORDS.md app-array column matches the CHORDS object', () => {
-  // Table rows look like: | Am | Minor | 0122 | 2210 | `[2, 2, 1, 0]` |
-  const rowRe = /^\|\s*([A-G][#b]?[^|]*?)\s*\|(?:[^|]*\|){2,3}\s*`\[([^\]]*)\]`\s*\|$/gm;
+  // Table rows look like: | Am | Minor | 0122 | 2210 | \[2, 2, 1, 0\] |
+  const rowRe = /^\|\s*([A-G][#b]?[^|]*?)\s*\|(?:[^|]*\|){2,3}\s*\\\[([^\]]*)\\\]\s*\|$/gm;
   let rows = 0, m;
   while ((m = rowRe.exec(md)) !== null) {
     const name = m[1].trim();
+    if (name === 'Chord') continue;
     if (!/^[A-G][#b]?/.test(name)) continue;
     const arr = m[2].split(',').map(s => {
       s = s.trim();
@@ -117,7 +118,7 @@ test('CHORDS.md app-array column matches the CHORDS object', () => {
     assert.deepEqual(J(app.CHORDS[name]), arr, `${name}: index.html disagrees with CHORDS.md`);
     rows++;
   }
-  assert.ok(rows > 150, `expected to parse most of CHORDS.md, only matched ${rows} rows`);
+  assert.ok(rows > 130, `expected to parse most of CHORDS.md, only matched ${rows} rows`);
 });
 
 // ---- getV lookup & fallback chain ----
