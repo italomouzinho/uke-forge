@@ -107,7 +107,11 @@ main{overflow-y:auto;padding:28px 32px;}
 .tx-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
 .tx-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--on-sd);margin-bottom:8px;}
 .tx-out{background:var(--surface-cmin);border:1px solid rgba(77,70,53,.2);border-radius:var(--r-md);padding:14px;min-height:260px;font-family:var(--manrope);font-size:12px;line-height:2;white-space:pre-wrap;overflow-y:auto;color:var(--on-sv);}
-.tx-chord{color:var(--primary);font-weight:600;}
+.tx-chord{color:var(--primary);font-weight:600;cursor:pointer;border-radius:2px;}
+.tx-chord:hover{background:rgba(255,196,100,.14);}
+.tx-popup{position:fixed;z-index:120;background:var(--surface-ch);border:1px solid rgba(77,70,53,.25);border-radius:var(--r-md);padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,.4);text-align:center;animation:fadeIn .12s ease both;}
+.tx-popup .cc-name{font-family:var(--newsreader);font-size:1.1rem;font-style:italic;color:var(--primary);margin-bottom:4px;}
+.tx-popup .cc-tab{font-size:10px;color:var(--on-sd);letter-spacing:.08em;margin-top:2px;}
 .tx-pima{color:var(--secondary);}
 .tx-ctrl{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
 .st-box{background:var(--surface-ch);border:1px solid rgba(77,70,53,.2);border-radius:var(--r-md);padding:5px 16px;font-size:14px;font-weight:700;color:var(--primary);min-width:76px;text-align:center;}
@@ -290,7 +294,8 @@ main{overflow-y:auto;padding:28px 32px;}
     <div id="ch-out" style="display:none">
       <div class="prog-title" id="prog-title"></div>
       <div class="prog-sub" id="prog-sub"></div>
-      <button class="btn ghost" style="width:auto;margin:0 0 16px;padding:6px 12px;" onclick="addCurrentToSong()">+ Add to song</button>
+      <button class="btn ghost" style="width:auto;margin:0 8px 16px 0;padding:6px 12px;" onclick="addCurrentToSong()">+ Add to song</button>
+      <button class="btn ghost" style="width:auto;margin:0 0 16px;padding:6px 12px;" onclick="sendToTranspose()">Send to Transpose</button>
       <div class="chord-row" id="chord-diagrams"></div>
       <div class="sec">Scale tones — <span id="scale-lbl"></span></div>
       <div class="scale-row" id="scale-strip"></div>
@@ -363,9 +368,11 @@ Supported:
         <div class="tx-lbl">Transposed — baritone uke DGBE <span class="tag">tenor</span></div>
         <div class="tx-out" id="tx-out">Transposed chart will appear here.</div>
         <div class="infobar" id="tx-info">Press <strong>Transpose →</strong> or <strong>Auto-fit voice</strong>.</div>
+        <div class="infobar">Tap any <span style="color:var(--primary)">chord</span> in the transposed chart to see its fretboard diagram.</div>
       </div>
     </div>
   </div>
+  <div id="tx-chord-popup" class="tx-popup" style="display:none"></div>
 </main>
 </div>
 </div>
@@ -662,7 +669,32 @@ function renderPatterns(){
 }
 function shiftSong(delta){txSt=((txSt+delta+12)%12);updateStBox();if(document.getElementById('tx-in').value.trim())transposeNow();}
 function updateStBox(){const d=txSt>6?txSt-12:txSt;document.getElementById('st-box').textContent=(d>=0?'+':'')+d+' st';}
-function clearTx(){txSt=0;updateStBox();document.getElementById('tx-out').textContent='Transposed output will appear here.';document.getElementById('tx-info').innerHTML='Press <strong>Transpose →</strong> or <strong>Auto-fit voice</strong>.';}
+function clearTx(){txSt=0;updateStBox();document.getElementById('tx-out').textContent='Transposed output will appear here.';document.getElementById('tx-info').innerHTML='Press <strong>Transpose →</strong> or <strong>Auto-fit voice</strong>.';hideChordPopup();}
+function sendToTranspose(){
+  if(!lastBuilt)return;
+  document.getElementById('tx-in').value=lastBuilt.chords.map(c=>`[${c.name}]`).join(' ');
+  txSt=0;updateStBox();
+  showTab('transpose',document.querySelector('.tab[data-tab="transpose"]'));
+  transposeNow();
+}
+function showChordPopup(e,name){
+  const popup=document.getElementById('tx-chord-popup');
+  const v=getV(name);
+  popup.innerHTML='';
+  const nm=document.createElement('div');nm.className='cc-name';nm.textContent=name;
+  const fw=makeFretSVG(v,name);
+  const tab=document.createElement('div');tab.className='cc-tab';tab.textContent=v.map(f=>f===null?'×':f).join('-');
+  popup.appendChild(nm);popup.appendChild(fw);popup.appendChild(tab);
+  popup.style.display='block';
+  const x=Math.min(e.clientX,window.innerWidth-120);
+  const y=Math.min(e.clientY+12,window.innerHeight-170);
+  popup.style.left=x+'px';popup.style.top=y+'px';
+  e.stopPropagation();
+}
+function hideChordPopup(){document.getElementById('tx-chord-popup').style.display='none';}
+document.addEventListener('click',e=>{
+  if(!e.target.classList.contains('tx-chord'))hideChordPopup();
+});
 function setVoice(v,btn){S.voice=v;document.querySelectorAll('#sb-transpose .mp').forEach(b=>b.classList.remove('on'));btn.classList.add('on');savePrefs();}
 const VSHIFT={bass:-3,baritone:0,tenor:2};
 function autoFit(){const shift=VSHIFT[S.voice]||0;txSt=(shift+12)%12;updateStBox();if(document.getElementById('tx-in').value.trim())transposeNow();const d=txSt>6?txSt-12:txSt;document.getElementById('tx-info').innerHTML=`Auto-fit to <strong>${S.voice}</strong>. Shifted <strong>${d>=0?'+':''}${d} st</strong>.`;}
@@ -681,11 +713,11 @@ function transposeNow(){
     if(isPima(line)){const sp=document.createElement('span');sp.className='tx-pima';sp.textContent=line;le.appendChild(sp);}
     else if(CHRE.test(line)){
       CHRE.lastIndex=0;let last=0,m;
-      while((m=CHRE.exec(line))!==null){if(m.index>last)le.appendChild(document.createTextNode(line.slice(last,m.index)));const sp=document.createElement('span');sp.className='tx-chord';sp.textContent='['+txChord(m[1],playSt)+']';le.appendChild(sp);last=m.index+m[0].length;}
+      while((m=CHRE.exec(line))!==null){if(m.index>last)le.appendChild(document.createTextNode(line.slice(last,m.index)));const sp=document.createElement('span');sp.className='tx-chord';const txName=txChord(m[1],playSt);sp.textContent='['+txName+']';sp.onclick=e=>showChordPopup(e,txName);le.appendChild(sp);last=m.index+m[0].length;}
       if(last<line.length)le.appendChild(document.createTextNode(line.slice(last)));
     }else if(isChordLine(line)){
       line.split(/(\b[A-G][#b]?(?:m(?:aj)?7?|7|dim|sus[24]?)?\b)/g).forEach(part=>{
-        if(/^[A-G][#b]?(?:m(?:aj)?7?|7|dim|sus[24]?)?$/.test(part)){const sp=document.createElement('span');sp.className='tx-chord';sp.textContent=txChord(part,playSt);le.appendChild(sp);}
+        if(/^[A-G][#b]?(?:m(?:aj)?7?|7|dim|sus[24]?)?$/.test(part)){const sp=document.createElement('span');sp.className='tx-chord';const txName=txChord(part,playSt);sp.textContent=txName;sp.onclick=e=>showChordPopup(e,txName);le.appendChild(sp);}
         else le.appendChild(document.createTextNode(part));
       });
     }else le.textContent=line;
