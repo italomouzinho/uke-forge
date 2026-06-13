@@ -119,6 +119,16 @@ main{overflow-y:auto;padding:28px 32px;}
 .capo-row{display:flex;align-items:center;gap:10px;margin-top:8px;}
 .capo-row span{font-size:11px;color:var(--on-sv);}
 .capo-n{font-family:var(--newsreader);font-size:1.2rem;font-weight:400;color:var(--primary);min-width:22px;text-align:center;}
+.exp-container{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;}
+.exp-svg-wrapper{background:var(--surface-ch);border:1px solid rgba(77,70,53,.15);border-radius:var(--r-md);padding:20px;width:180px;flex-shrink:0;}
+.exp-svg{width:100%;height:auto;display:block;}
+.exp-results{flex:1;display:flex;flex-direction:column;gap:16px;min-width:260px;}
+.exp-chord-name{font-family:var(--newsreader);font-size:2.2rem;font-weight:300;font-style:italic;color:var(--primary);line-height:1.1;}
+.exp-notes-played{font-size:11px;color:var(--secondary);letter-spacing:.08em;margin-top:4px;}
+.exp-sugg-card{background:var(--surface-ch);border:1px solid rgba(77,70,53,.15);padding:16px;border-radius:var(--r-md);animation:fadeIn .2s ease both;}
+.exp-sugg-title{font-size:11px;color:var(--on-sv);margin-bottom:12px;}
+.sugg-prog-btn{display:block;width:100%;text-align:left;background:none;border:1px solid rgba(77,70,53,.22);color:var(--on-sv);padding:9px 10px;border-radius:var(--r-sm);margin-bottom:6px;cursor:pointer;font-family:var(--manrope);font-size:11px;transition:all .15s;}
+.sugg-prog-btn:hover{border-color:rgba(255,196,100,.4);color:var(--primary);background:rgba(255,196,100,.06);}
 .empty{text-align:center;padding:80px 20px;color:var(--on-sd);font-size:12px;line-height:2.5;}
 .empty .big{font-family:var(--newsreader);font-size:56px;font-style:italic;color:var(--surface-cmax);display:block;margin-bottom:16px;}
 ::-webkit-scrollbar{width:3px;height:3px;}
@@ -142,9 +152,10 @@ main{overflow-y:auto;padding:28px 32px;}
   <div class="tuning">D · G · B · E</div>
   <span style="font-size:10px;color:var(--on-sd);">baritone · steel</span>
   <div class="tabs">
-    <button class="tab on" onclick="showTab('chords',this)">Chords</button>
-    <button class="tab" onclick="showTab('patterns',this)">Patterns</button>
-    <button class="tab" onclick="showTab('transpose',this)">Transpose</button>
+    <button class="tab on" data-tab="chords" onclick="showTab('chords',this)">Chords</button>
+    <button class="tab" data-tab="explore" onclick="showTab('explore',this)">Explore</button>
+    <button class="tab" data-tab="patterns" onclick="showTab('patterns',this)">Patterns</button>
+    <button class="tab" data-tab="transpose" onclick="showTab('transpose',this)">Transpose</button>
   </div>
 </header>
 <div class="body">
@@ -168,6 +179,15 @@ main{overflow-y:auto;padding:28px 32px;}
       <div class="lbl">Custom (Roman numerals)</div>
       <textarea id="custom-prog" rows="2" placeholder="e.g. i iv V7 i"></textarea>
       <button class="btn" onclick="buildCustom()">Build</button>
+    </div>
+  </div>
+  <div id="sb-explore" style="display:none">
+    <div class="sb">
+      <div class="lbl">Laboratory controls</div>
+      <button class="btn ghost" onclick="clearExperiment()">Clear fretboard</button>
+    </div>
+    <div class="sb">
+      <div class="infobar"><strong>How to use</strong><br>Click on the fretboard to place fingers. Click above the nut for an open string. The analyser identifies the chord and suggests a harmonisation to explore.</div>
     </div>
   </div>
   <div id="sb-patterns" style="display:none">
@@ -219,6 +239,19 @@ main{overflow-y:auto;padding:28px 32px;}
       <div class="chord-row" id="chord-diagrams"></div>
       <div class="sec">Scale tones — <span id="scale-lbl"></span></div>
       <div class="scale-row" id="scale-strip"></div>
+    </div>
+  </div>
+  <div class="panel" id="panel-explore">
+    <div class="sec">Interactive fretboard laboratory</div>
+    <div class="exp-container">
+      <div class="exp-svg-wrapper" id="exp-fretboard-container"></div>
+      <div class="exp-results">
+        <div>
+          <div class="exp-chord-name" id="exp-chord-name">Awaiting input</div>
+          <div class="exp-notes-played" id="exp-notes">Notes: —</div>
+        </div>
+        <div id="exp-suggestions-container"></div>
+      </div>
     </div>
   </div>
   <div class="panel" id="panel-patterns">
@@ -341,6 +374,7 @@ const PATDATA=[
 
 const S={key:'E',mode:'minor',voice:'tenor',capo:0};
 let txSt=0;
+let expFrets=[null,null,null,null]; // [D,G,B,E]
 
 const LSKEY='ukeforge.prefs';
 function savePrefs(){try{localStorage.setItem(LSKEY,JSON.stringify({key:S.key,mode:S.mode,voice:S.voice,capo:S.capo}));}catch(e){}}
@@ -357,7 +391,7 @@ function syncPills(rowId,val){document.querySelectorAll('#'+rowId+' .mp').forEac
 
 (function init(){
   loadPrefs();
-  buildKeyGrid();buildProgChips();buildPatChips();renderPatterns();
+  buildKeyGrid();buildProgChips();buildPatChips();renderPatterns();renderExpFretboard();
   syncPills('mode-row',S.mode);syncPills('voice-row',S.voice);updateCapoUI();
 })();
 
@@ -527,11 +561,123 @@ Chord chart for: ${q}`;
     st.textContent='Clipboard unavailable — prompt placed in the box below, copy it from there';st.style.color='var(--red2)';
   }
 }
+// --- Explore: interactive fretboard laboratory ---
+const CHORD_FORMULAS=[
+  {q:'',iv:[0,4,7],mode:'major'},{q:'m',iv:[0,3,7],mode:'minor'},
+  {q:'7',iv:[0,4,7,10],mode:'blues'},{q:'maj7',iv:[0,4,7,11],mode:'major'},
+  {q:'m7',iv:[0,3,7,10],mode:'minor'},{q:'dim',iv:[0,3,6],mode:'minor'},
+  {q:'aug',iv:[0,4,8],mode:'major'},{q:'sus2',iv:[0,2,7],mode:'major'},
+  {q:'sus4',iv:[0,5,7],mode:'major'},{q:'m7b5',iv:[0,3,6,10],mode:'minor'},
+  {q:'dim7',iv:[0,3,6,9],mode:'minor'},{q:'6',iv:[0,4,7,9],mode:'major'},
+  {q:'m6',iv:[0,3,7,9],mode:'minor'},{q:'add9',iv:[0,2,4,7],mode:'major'},
+  {q:'madd9',iv:[0,2,3,7],mode:'minor'},{q:'9',iv:[0,2,4,7,10],mode:'blues'},
+];
+function clearExperiment(){expFrets=[null,null,null,null];renderExpFretboard();analyseExperiment();}
+function toggleExpFret(stringIdx,fret){
+  expFrets[stringIdx]=expFrets[stringIdx]===fret?null:fret;
+  renderExpFretboard();analyseExperiment();
+}
+function renderExpFretboard(){
+  const W=140,H=340,NF=12,sX=[20,53,86,120],sn=['D','G','B','E'];
+  const fY=[];for(let i=0;i<=NF;i++)fY.push(25+i*24);
+  let s=`<svg viewBox="0 0 ${W} ${H}" class="exp-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Interactive fretboard, click to build a chord">`;
+  s+=`<defs><filter id="fdot2" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
+  s+=`<rect x="10" y="${fY[0]-8}" width="120" height="8" fill="#c9b898" rx="2"/>`;
+  for(let i=1;i<=NF;i++){
+    s+=`<line x1="10" y1="${fY[i]}" x2="130" y2="${fY[i]}" stroke="#252220" stroke-width="1"/>`;
+    if([3,5,7,9,12].includes(i))s+=`<circle cx="70" cy="${fY[i]-12}" r="3" fill="#4d4635"/>`;
+  }
+  sX.forEach((x,i)=>{
+    s+=`<line x1="${x}" y1="${fY[0]}" x2="${x}" y2="${fY[NF]}" stroke="#4d4635" stroke-width="1.5"/>`;
+    s+=`<text x="${x}" y="10" font-family="Manrope,sans-serif" font-size="9" fill="#7a6f5e" text-anchor="middle">${sn[i]}</text>`;
+  });
+  for(let st=0;st<4;st++){
+    for(let f=0;f<=NF;f++){
+      const isSel=expFrets[st]===f;
+      const cy=f===0?fY[0]-16:fY[f]-12;
+      if(isSel){
+        if(f===0)s+=`<circle cx="${sX[st]}" cy="${cy}" r="6" fill="none" stroke="#ffc464" stroke-width="2"/>`;
+        else s+=`<circle cx="${sX[st]}" cy="${cy}" r="8" fill="#ffc464" filter="url(#fdot2)"/>`;
+      }
+      const rectY=f===0?0:fY[f-1];
+      const rectH=f===0?25:24;
+      s+=`<rect x="${sX[st]-15}" y="${rectY}" width="30" height="${rectH}" fill="transparent" style="cursor:pointer" onclick="toggleExpFret(${st},${f})"/>`;
+    }
+  }
+  s+='</svg>';
+  document.getElementById('exp-fretboard-container').innerHTML=s;
+}
+function analyseExperiment(){
+  const PITCH_CLASSES=[nIdx('D'),nIdx('G'),nIdx('B'),nIdx('E')];
+  const BASE_SEMITONES=[0,5,9,14];
+  let active=[];
+  for(let i=0;i<4;i++){
+    if(expFrets[i]!==null)active.push({pc:(PITCH_CLASSES[i]+expFrets[i])%12,pitch:BASE_SEMITONES[i]+expFrets[i]});
+  }
+  const nameEl=document.getElementById('exp-chord-name');
+  const notesEl=document.getElementById('exp-notes');
+  const suggCont=document.getElementById('exp-suggestions-container');
+  suggCont.innerHTML='';
+  if(active.length===0){nameEl.textContent='Awaiting input';notesEl.textContent='Notes: —';return;}
+  active.sort((a,b)=>a.pitch-b.pitch);
+  const bassPC=active[0].pc;
+  const uniquePCs=[...new Set(active.map(n=>n.pc))];
+  notesEl.textContent='Notes: '+uniquePCs.map(pc=>NOTES[pc]).join(', ');
+  if(uniquePCs.length===1){nameEl.textContent=NOTES[uniquePCs[0]]+' note';return;}
+  if(uniquePCs.length===2){
+    const diff=(uniquePCs[1]-uniquePCs[0]+12)%12;
+    if(diff===7)nameEl.textContent=NOTES[uniquePCs[0]]+'5 (power chord)';
+    else if(diff===5)nameEl.textContent=NOTES[uniquePCs[1]]+'5 (power chord)';
+    else nameEl.textContent='Dyad / interval';
+    return;
+  }
+  let matches=[];
+  for(const root of uniquePCs){
+    const intervals=uniquePCs.map(pc=>(pc-root+12)%12).sort((a,b)=>a-b);
+    const intStr=JSON.stringify(intervals);
+    for(const form of CHORD_FORMULAS)if(JSON.stringify(form.iv)===intStr)matches.push({root,q:form.q,mode:form.mode});
+  }
+  if(matches.length===0){
+    const rootless=[
+      {q:'7',iv:[0,4,10],mode:'blues'},{q:'maj7',iv:[0,4,11],mode:'major'},
+      {q:'m7',iv:[0,3,10],mode:'minor'},{q:'mMaj7',iv:[0,3,11],mode:'minor'},
+    ];
+    for(const root of uniquePCs){
+      const intervals=uniquePCs.map(pc=>(pc-root+12)%12).sort((a,b)=>a-b);
+      const intStr=JSON.stringify(intervals);
+      for(const form of rootless)if(JSON.stringify(form.iv)===intStr)matches.push({root,q:form.q,mode:form.mode});
+    }
+  }
+  if(matches.length>0){
+    const best=matches[0];
+    let cName=NOTES[best.root]+best.q;
+    if(bassPC!==best.root)cName+='/'+NOTES[bassPC];
+    nameEl.textContent=cName;
+    const rName=NOTES[best.root];
+    const modeName=best.mode.charAt(0).toUpperCase()+best.mode.slice(1);
+    let sHtml=`<div class="exp-sugg-card"><div class="exp-sugg-title">Explore <strong>${rName} ${modeName}</strong> harmonisation:</div>`;
+    (PRESETS[best.mode]||[]).forEach(pr=>{
+      sHtml+=`<button class="sugg-prog-btn" onclick="sendExperimentToChords('${rName}','${best.mode}','${pr.d.join(' ')}')">Load: ${pr.l}</button>`;
+    });
+    sHtml+='</div>';
+    suggCont.innerHTML=sHtml;
+  }else{
+    nameEl.textContent='Unknown cluster';
+  }
+}
+function sendExperimentToChords(key,mode,progStr){
+  S.key=key;S.mode=mode;
+  buildKeyGrid();syncPills('mode-row',mode);buildProgChips();
+  document.getElementById('custom-prog').value=progStr;
+  buildProg(progStr.split(' '));
+  savePrefs();
+  showTab('chords',document.querySelector('.tab[data-tab="chords"]'));
+}
 function showTab(tab,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.tab').forEach(b=>{b.classList.remove('on');b.removeAttribute('aria-current');});
   document.getElementById('panel-'+tab).classList.add('on');btn.classList.add('on');btn.setAttribute('aria-current','true');
-  ['chords','patterns','transpose'].forEach(t=>{const el=document.getElementById('sb-'+t);if(el)el.style.display=t===tab?'block':'none';});
+  ['chords','explore','patterns','transpose'].forEach(t=>{const el=document.getElementById('sb-'+t);if(el)el.style.display=t===tab?'block':'none';});
 }
 </script>
 </body>
