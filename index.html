@@ -64,6 +64,7 @@ textarea:focus,input[type=text]:focus{border-color:var(--primary);}
 textarea::placeholder,input::placeholder{color:var(--on-sd);}
 .btn{width:100%;background:linear-gradient(135deg,var(--primary) 0%,var(--primary-c) 100%);border:none;color:var(--on-primary);font-family:var(--manrope);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:9px;border-radius:var(--r-md);cursor:pointer;transition:opacity .15s;margin-top:8px;}
 .btn:hover{opacity:.85;}
+.btn:disabled{opacity:.35;cursor:not-allowed;}
 .btn.ghost{background:none;border:1px solid rgba(77,70,53,.22);color:var(--primary);}
 .btn.ghost:hover{border-color:rgba(255,196,100,.4);background:rgba(255,196,100,.06);}
 main{overflow-y:auto;padding:28px 32px;}
@@ -143,6 +144,26 @@ main{overflow-y:auto;padding:28px 32px;}
 .neighbor-btn:hover{border-color:rgba(161,207,207,.4);color:var(--secondary);background:rgba(161,207,207,.06);}
 .empty{text-align:center;padding:80px 20px;color:var(--on-sd);font-size:12px;line-height:2.5;}
 .empty .big{font-family:var(--newsreader);font-size:56px;font-style:italic;color:var(--surface-cmax);display:block;margin-bottom:16px;}
+.song-card{background:var(--surface-ch);border:1px solid rgba(77,70,53,.15);border-radius:var(--r-md);padding:16px 20px;margin-bottom:14px;animation:fadeIn .2s ease both;}
+.song-card-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.song-card-name{font-family:var(--newsreader);font-size:1.3rem;font-style:italic;color:var(--primary);background:none;border:none;border-bottom:1px dashed transparent;flex:1;min-width:0;}
+.song-card-name:hover,.song-card-name:focus{border-bottom-color:var(--outline);}
+.song-card-meta{font-size:11px;color:var(--on-sd);letter-spacing:.06em;margin-bottom:10px;}
+.song-card-chords{font-size:13px;color:var(--on-sv);letter-spacing:.04em;}
+.song-card-actions{display:flex;gap:6px;flex-shrink:0;}
+.song-card-actions button{background:none;border:1px solid rgba(77,70,53,.22);color:var(--on-sv);width:26px;height:26px;border-radius:var(--r-sm);cursor:pointer;font-size:12px;line-height:1;}
+.song-card-actions button:hover{border-color:rgba(255,196,100,.4);color:var(--primary);}
+.perf-overlay{position:fixed;inset:0;background:var(--surface);z-index:100;display:flex;flex-direction:column;padding:24px 32px;}
+.perf-top{display:flex;align-items:center;gap:16px;margin-bottom:24px;}
+.perf-section-name{font-family:var(--newsreader);font-size:1.6rem;font-style:italic;color:var(--primary);flex:1;}
+.perf-progress{font-size:11px;color:var(--on-sd);letter-spacing:.1em;}
+.perf-chords{flex:1;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:32px;overflow:auto;}
+.perf-chords .cc{transform:scale(1.6);}
+.perf-nav{display:flex;justify-content:center;gap:16px;padding-top:24px;}
+@media (max-width:860px){
+  .perf-chords .cc{transform:scale(1.15);}
+  .perf-chords{gap:16px;}
+}
 ::-webkit-scrollbar{width:3px;height:3px;}
 ::-webkit-scrollbar-track{background:var(--surface);}
 ::-webkit-scrollbar-thumb{background:var(--surface-cmax);border-radius:2px;}
@@ -169,6 +190,7 @@ main{overflow-y:auto;padding:28px 32px;}
     <button class="tab on" data-tab="chords" onclick="showTab('chords',this)">Chords</button>
     <button class="tab" data-tab="explore" onclick="showTab('explore',this)">Explore</button>
     <button class="tab" data-tab="patterns" onclick="showTab('patterns',this)">Patterns</button>
+    <button class="tab" data-tab="song" onclick="showTab('song',this)">Song</button>
     <button class="tab" data-tab="transpose" onclick="showTab('transpose',this)">Transpose</button>
   </div>
 </header>
@@ -226,6 +248,16 @@ main{overflow-y:auto;padding:28px 32px;}
       </div>
     </div>
   </div>
+  <div id="sb-song" style="display:none">
+    <div class="sb">
+      <div class="lbl">Set list</div>
+      <button class="btn" onclick="startPerformance()" id="perform-btn">▶ Performance mode</button>
+      <button class="btn ghost" onclick="clearSong()">Clear song</button>
+    </div>
+    <div class="sb">
+      <div class="infobar"><strong>How to use</strong><br>Build a progression on the Chords tab, then tap <strong>Add to song</strong> to save it as a section here. Reorder, rename, or remove sections, then start Performance mode to step through them live.</div>
+    </div>
+  </div>
   <div id="sb-transpose" style="display:none">
     <div class="sb">
       <div class="lbl">Voice range</div>
@@ -256,6 +288,7 @@ main{overflow-y:auto;padding:28px 32px;}
     <div id="ch-out" style="display:none">
       <div class="prog-title" id="prog-title"></div>
       <div class="prog-sub" id="prog-sub"></div>
+      <button class="btn ghost" style="width:auto;margin:0 0 16px;padding:6px 12px;" onclick="addCurrentToSong()">+ Add to song</button>
       <div class="chord-row" id="chord-diagrams"></div>
       <div class="sec">Scale tones — <span id="scale-lbl"></span></div>
       <div class="scale-row" id="scale-strip"></div>
@@ -291,6 +324,11 @@ main{overflow-y:auto;padding:28px 32px;}
   </div>
   <div class="panel" id="panel-patterns">
     <div id="pat-out"></div>
+  </div>
+  <div class="panel" id="panel-song">
+    <div class="sec">Song builder</div>
+    <div id="song-empty" class="empty"><span class="big">♪</span>No sections yet<br>Build a progression on the Chords tab and tap "Add to song"</div>
+    <div id="song-list"></div>
   </div>
   <div class="panel" id="panel-transpose">
     <div class="sec">Song transposer</div>
@@ -328,6 +366,18 @@ Supported:
   </div>
 </main>
 </div>
+</div>
+<div id="perf-overlay" class="perf-overlay" style="display:none">
+  <div class="perf-top">
+    <div class="perf-section-name" id="perf-section-name"></div>
+    <div class="perf-progress" id="perf-progress"></div>
+    <button class="btn ghost" style="width:auto;margin:0;padding:6px 14px;" onclick="exitPerformance()">✕ Exit</button>
+  </div>
+  <div class="perf-chords" id="perf-chords"></div>
+  <div class="perf-nav">
+    <button class="btn ghost" style="width:auto;margin:0;padding:10px 20px;" onclick="perfPrev()">‹ Prev</button>
+    <button class="btn ghost" style="width:auto;margin:0;padding:10px 20px;" onclick="perfNext()">Next ›</button>
+  </div>
 </div>
 <script>
 const NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -418,8 +468,12 @@ let expFrets=[null,null,null,null]; // [D,G,B,E]
 let expProg=[];
 let expCurrentChord=null;
 const NEIGHBOR_DEGS={major:['I','IV','V','vi','ii'],minor:['i','iv','v','VI','III'],blues:['I7','IV7','V7']};
+let lastBuilt=null;
+let SONG=[];
+let perfIdx=0;
 
 const LSKEY='ukeforge.prefs';
+const SONGKEY='ukeforge.song';
 function savePrefs(){try{localStorage.setItem(LSKEY,JSON.stringify({key:S.key,mode:S.mode,voice:S.voice,capo:S.capo,customMode:S.customMode}));}catch(e){}}
 function loadPrefs(){
   try{
@@ -434,8 +488,8 @@ function loadPrefs(){
 function syncPills(rowId,val){document.querySelectorAll('#'+rowId+' .mp').forEach(b=>b.classList.toggle('on',b.dataset.v===val));}
 
 (function init(){
-  loadPrefs();
-  buildKeyGrid();buildProgChips();buildPatChips();renderPatterns();renderExpFretboard();renderExpProgChips();
+  loadPrefs();loadSong();
+  buildKeyGrid();buildProgChips();buildPatChips();renderPatterns();renderExpFretboard();renderExpProgChips();renderSongList();
   syncPills('mode-row',S.mode);syncPills('voice-row',S.voice);syncPills('custom-mode-row',S.customMode);updateCapoUI();updateCustomPlaceholder();
 })();
 
@@ -491,6 +545,12 @@ function renderChords(chords,degrees,subLabel){
   const cont=document.getElementById('chord-diagrams');cont.innerHTML='';
   chords.forEach((c,i)=>{const card=makeCard(c,degrees[i],i);cont.appendChild(card);});
   renderScaleStrip();
+  lastBuilt={
+    name:`${dispNote(S.key)} ${mL}`,
+    sub:subLabel!==undefined?subLabel:degrees.join('  ·  '),
+    chords:chords.map(c=>({name:c.name})),
+    degrees:degrees.slice(),
+  };
 }
 function makeCard(chord,deg,i){
   const card=document.createElement('div');card.className='cc';card.style.animationDelay=(i*.04)+'s';
@@ -806,6 +866,68 @@ function buildExpProgression(){
   buildCustom();
   showTab('chords',document.querySelector('.tab[data-tab="chords"]'));
 }
+
+// --- Song builder & performance mode ---
+function saveSong(){try{localStorage.setItem(SONGKEY,JSON.stringify(SONG));}catch(e){}}
+function loadSong(){try{const s=JSON.parse(localStorage.getItem(SONGKEY)||'[]');if(Array.isArray(s))SONG=s;}catch(e){}}
+function addCurrentToSong(){
+  if(!lastBuilt)return;
+  SONG.push({name:`Section ${SONG.length+1}`,title:lastBuilt.name,sub:lastBuilt.sub,chords:lastBuilt.chords,degrees:lastBuilt.degrees});
+  saveSong();renderSongList();
+  showTab('song',document.querySelector('.tab[data-tab="song"]'));
+}
+function removeSongSection(i){SONG.splice(i,1);saveSong();renderSongList();}
+function moveSongSection(i,dir){
+  const j=i+dir;if(j<0||j>=SONG.length)return;
+  [SONG[i],SONG[j]]=[SONG[j],SONG[i]];saveSong();renderSongList();
+}
+function renameSongSection(i,name){SONG[i].name=name;saveSong();}
+function clearSong(){if(SONG.length&&!confirm('Clear the whole song?'))return;SONG=[];saveSong();renderSongList();}
+function renderSongList(){
+  const list=document.getElementById('song-list');const empty=document.getElementById('song-empty');
+  list.innerHTML='';
+  empty.style.display=SONG.length?'none':'block';
+  document.getElementById('perform-btn').disabled=SONG.length===0;
+  SONG.forEach((sec,i)=>{
+    const card=document.createElement('div');card.className='song-card';
+    const head=document.createElement('div');head.className='song-card-head';
+    const name=document.createElement('input');name.className='song-card-name';name.value=sec.name;
+    name.setAttribute('aria-label','Section name');
+    name.oninput=()=>renameSongSection(i,name.value);
+    const actions=document.createElement('div');actions.className='song-card-actions';
+    const up=document.createElement('button');up.textContent='↑';up.setAttribute('aria-label','Move up');up.disabled=i===0;up.onclick=()=>moveSongSection(i,-1);
+    const down=document.createElement('button');down.textContent='↓';down.setAttribute('aria-label','Move down');down.disabled=i===SONG.length-1;down.onclick=()=>moveSongSection(i,1);
+    const del=document.createElement('button');del.textContent='×';del.setAttribute('aria-label','Remove section');del.onclick=()=>removeSongSection(i);
+    actions.appendChild(up);actions.appendChild(down);actions.appendChild(del);
+    head.appendChild(name);head.appendChild(actions);
+    const meta=document.createElement('div');meta.className='song-card-meta';meta.textContent=`${sec.title}${sec.sub?' · '+sec.sub:''}`;
+    const chords=document.createElement('div');chords.className='song-card-chords';chords.textContent=sec.chords.map(c=>c.name).join('  ·  ');
+    card.appendChild(head);card.appendChild(meta);card.appendChild(chords);
+    list.appendChild(card);
+  });
+}
+function startPerformance(){
+  if(SONG.length===0)return;
+  perfIdx=0;
+  document.getElementById('perf-overlay').style.display='flex';
+  renderPerfSection();
+}
+function exitPerformance(){document.getElementById('perf-overlay').style.display='none';}
+function perfNext(){if(perfIdx<SONG.length-1){perfIdx++;renderPerfSection();}}
+function perfPrev(){if(perfIdx>0){perfIdx--;renderPerfSection();}}
+function renderPerfSection(){
+  const sec=SONG[perfIdx];
+  document.getElementById('perf-section-name').textContent=sec.name;
+  document.getElementById('perf-progress').textContent=`${perfIdx+1} / ${SONG.length}`;
+  const cont=document.getElementById('perf-chords');cont.innerHTML='';
+  sec.chords.forEach((c,i)=>{const card=makeCard(c,sec.degrees[i],i);cont.appendChild(card);});
+}
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('perf-overlay').style.display==='none')return;
+  if(e.key==='ArrowRight')perfNext();
+  else if(e.key==='ArrowLeft')perfPrev();
+  else if(e.key==='Escape')exitPerformance();
+});
 function sendExperimentToChords(key,mode,progStr){
   S.key=key;S.mode=mode;
   buildKeyGrid();syncPills('mode-row',mode);buildProgChips();
@@ -822,7 +944,8 @@ function showTab(tab,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.tab').forEach(b=>{b.classList.remove('on');b.removeAttribute('aria-current');});
   document.getElementById('panel-'+tab).classList.add('on');btn.classList.add('on');btn.setAttribute('aria-current','true');
-  ['chords','explore','patterns','transpose'].forEach(t=>{const el=document.getElementById('sb-'+t);if(el)el.style.display=t===tab?'block':'none';});
+  ['chords','explore','patterns','song','transpose'].forEach(t=>{const el=document.getElementById('sb-'+t);if(el)el.style.display=t===tab?'block':'none';});
+  if(tab!=='chords')expandSidebar();
 }
 </script>
 </body>

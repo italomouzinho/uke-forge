@@ -46,6 +46,7 @@ function loadApp() {
       getElementById: () => fakeEl(),
       createElement: () => fakeEl(),
       querySelectorAll: () => [],
+      addEventListener: () => {},
     },
     localStorage: {
       getItem: k => (store.has(k) ? store.get(k) : null),
