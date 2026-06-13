@@ -98,6 +98,7 @@ main{overflow-y:auto;padding:28px 32px;}
 .dot.PA{background:rgba(255,196,100,.07);color:var(--on-sv);border:1px solid rgba(255,196,100,.18);width:auto;padding:0 6px;}
 .dot.Sd{background:rgba(255,196,100,.1);color:var(--primary);border:1px solid rgba(255,196,100,.18);font-size:14px;}
 .dot.Su{background:rgba(161,207,207,.08);color:var(--secondary);border:1px solid rgba(161,207,207,.15);font-size:14px;}
+.dot.Sx{background:rgba(176,80,80,.1);color:#c97a7a;border:1px solid rgba(176,80,80,.22);font-size:12px;}
 .tx-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
 .tx-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--on-sd);margin-bottom:8px;}
 .tx-out{background:var(--surface-cmin);border:1px solid rgba(77,70,53,.2);border-radius:var(--r-md);padding:14px;min-height:260px;font-family:var(--manrope);font-size:12px;line-height:2;white-space:pre-wrap;overflow-y:auto;color:var(--on-sv);}
@@ -148,7 +149,7 @@ main{overflow-y:auto;padding:28px 32px;}
 <body>
 <div class="app">
 <header>
-  <div class="logo">Uke<em>Forge</em></div>
+  <div class="logo" role="button" tabindex="0" style="cursor:pointer;" onclick="goHome()" onkeydown="if(event.key==='Enter')goHome()">Uke<em>Forge</em></div>
   <div class="tuning">D · G · B · E</div>
   <span style="font-size:10px;color:var(--on-sd);">baritone · steel</span>
   <div class="tabs">
@@ -300,6 +301,7 @@ const NOTESF=['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
 function nIdx(n){let i=NOTES.indexOf(n);if(i<0)i=NOTESF.indexOf(n);return i<0?0:i;}
 function nAt(ri,st){return NOTES[(ri+st+120)%12];}
 function f2s(n){const i=NOTESF.indexOf(n);return i>=0?NOTES[i]:n;}
+function dispNote(n){return NOTESF[nIdx(n)];}
 
 // Chord shapes generated from CHORDS.md — the canonical baritone DGBE chord library.
 // Notation: [D, G, B, E] fret arrays (null = muted string, 0 = open string).
@@ -370,6 +372,8 @@ const PATDATA=[
   {id:'pinch',title:'Pinch pulse — turnaround',desc:'P alone on 1–2, P+A simultaneous pinch on 3–4. High E accent pulls you back.',strings:['D  (P)','G  (I)','B  (M)','E  (A)'],beats:['1','2','3','4'],grid:[['P','P','PA','PA'],['','','',''],['','','',''],['','','PA','PA']],},
   {id:'waltz',title:'Waltz — 3/4',desc:'P on 1, I+M on 2, A on 3. Works for slow folk material.',strings:['D  (P)','G  (I)','B  (M)','E  (A)'],beats:['1','2','3'],grid:[['P','',''],['','I',''],['','M',''],['','','A']],},
   {id:'strum',title:'Slow delta strum',desc:'Down 1+3, up 2+4. Use thumb flesh. Let it breathe.',strings:['All'],beats:['1','2','3','4'],grid:[['↓','↑','↓','↑']],strum:true,},
+  {id:'island',title:'Island strum — calypso',desc:'D · DU · UDDU. Classic uke groove — keep the wrist loose and let the upstrokes skip lightly.',strings:['All'],beats:['1','1½','2','2½','3','3½','4','4½'],grid:[['↓','','↓','↑','↑','↓','↓','↑']],strum:true,},
+  {id:'skank',title:'Reggae skank — muted',desc:'X = percussive palm-muted hit on the beat, sharp upstroke on the off-beat.',strings:['All'],beats:['1','1½','2','2½','3','3½','4','4½'],grid:[['X','↑','X','↑','X','↑','X','↑']],strum:true,},
 ];
 
 const S={key:'E',mode:'minor',voice:'tenor',capo:0};
@@ -399,7 +403,7 @@ function buildKeyGrid(){
   const g=document.getElementById('key-grid');g.innerHTML='';
   NOTES.forEach(n=>{
     const p=document.createElement('button');p.className='kp'+(n===S.key?' on':'');
-    p.textContent=n;p.onclick=()=>{S.key=n;buildKeyGrid();savePrefs();};g.appendChild(p);
+    p.textContent=dispNote(n);p.onclick=()=>{S.key=n;buildKeyGrid();savePrefs();};g.appendChild(p);
   });
 }
 function setMode(m,btn){S.mode=m;document.querySelectorAll('#sb-chords .mp').forEach(b=>b.classList.remove('on'));btn.classList.add('on');buildProgChips();savePrefs();}
@@ -414,7 +418,7 @@ function buildPatChips(){
 function deg2chord(deg,root){
   const map=DEGMAP[deg];if(!map)return{name:deg,deg};
   const ri=nIdx(root);const cr=nAt(ri,map.o);
-  let name=cr;
+  let name=dispNote(cr);
   if(map.q==='m')name+='m';else if(map.q==='7')name+='7';else if(map.q==='m7')name+='m7';else if(map.q==='dim')name+='dim';
   return{name,deg};
 }
@@ -424,9 +428,9 @@ function renderChords(chords,degrees){
   document.getElementById('ch-empty').style.display='none';
   document.getElementById('ch-out').style.display='block';
   const mL=S.mode.charAt(0).toUpperCase()+S.mode.slice(1);
-  document.getElementById('prog-title').textContent=`${S.key} ${mL}`;
+  document.getElementById('prog-title').textContent=`${dispNote(S.key)} ${mL}`;
   document.getElementById('prog-sub').textContent=degrees.join('  ·  ');
-  document.getElementById('scale-lbl').textContent=`${S.key} ${S.mode}`;
+  document.getElementById('scale-lbl').textContent=`${dispNote(S.key)} ${S.mode}`;
   const cont=document.getElementById('chord-diagrams');cont.innerHTML='';
   chords.forEach((c,i)=>{const card=makeCard(c,degrees[i],i);cont.appendChild(card);});
   renderScaleStrip();
@@ -471,7 +475,7 @@ function makeFretSVG(frets,name){
 function renderScaleStrip(){
   const strip=document.getElementById('scale-strip');strip.innerHTML='';
   const ri=nIdx(S.key);const sc=(SCALEPAT[S.mode]||SCALEPAT.minor).map(o=>nAt(ri,o));
-  NOTES.forEach(n=>{const el=document.createElement('div');el.className='sn';if(n===S.key)el.className+=' root';else if(sc.includes(n))el.className+=' in';el.textContent=n;strip.appendChild(el);});
+  NOTES.forEach(n=>{const el=document.createElement('div');el.className='sn';if(n===S.key)el.className+=' root';else if(sc.includes(n))el.className+=' in';el.textContent=dispNote(n);strip.appendChild(el);});
 }
 function renderPatterns(){
   const out=document.getElementById('pat-out');out.innerHTML='';
@@ -487,7 +491,7 @@ function renderPatterns(){
       p.beats.forEach((_,bi)=>{
         const cell=row.insertCell();const val=(p.grid[si]||[])[bi]||'';
         if(val){const dot=document.createElement('span');dot.className='dot';
-          if(p.strum){dot.className+=val==='↓'?' Sd':' Su';dot.textContent=val;}
+          if(p.strum){dot.className+=val==='↓'?' Sd':val==='↑'?' Su':' Sx';dot.textContent=val;}
           else if(val==='PA'){dot.className+=' PA';dot.textContent='P+A';}
           else{dot.className+=' '+val;dot.textContent=val;}
           cell.appendChild(dot);}
@@ -508,7 +512,7 @@ function autoFit(){const shift=VSHIFT[S.voice]||0;txSt=(shift+12)%12;updateStBox
 function updateCapoUI(){document.getElementById('capo-n').textContent=S.capo;document.getElementById('capo-lbl').textContent=S.capo===0?'as written':'play shapes '+S.capo+' st lower';}
 function adjustCapo(delta){S.capo=Math.max(0,Math.min(7,S.capo+delta));updateCapoUI();savePrefs();if(document.getElementById('tx-in').value.trim())transposeNow();}
 const CHRE=/\[([A-G][#b]?(?:m(?:aj)?7?|7|dim|aug|sus[24]?|add[29]?|2|4)?)\]/g;
-function txChord(name,st){if(!st)return name;const m=name.match(/^([A-G][#b]?)(.*)/);if(!m)return name;const[,r,suf]=m;return nAt(nIdx(r),st)+suf;}
+function txChord(name,st){const m=name.match(/^([A-G][#b]?)(.*)/);if(!m)return name;const[,r,suf]=m;return dispNote(nAt(nIdx(r),st||0))+suf;}
 function isPima(line){return/^[PIMA\s½\d·\-]+$/.test(line.trim())&&line.trim().length>1;}
 function isChordLine(line){const w=line.trim().split(/\s+/).filter(Boolean);if(!w.length)return false;const cc=w.filter(x=>/^[A-G][#b]?(?:m(?:aj)?7?|7|dim|sus[24]?)?$/.test(x)).length;return cc/w.length>0.55;}
 function transposeNow(){
@@ -622,12 +626,12 @@ function analyseExperiment(){
   active.sort((a,b)=>a.pitch-b.pitch);
   const bassPC=active[0].pc;
   const uniquePCs=[...new Set(active.map(n=>n.pc))];
-  notesEl.textContent='Notes: '+uniquePCs.map(pc=>NOTES[pc]).join(', ');
-  if(uniquePCs.length===1){nameEl.textContent=NOTES[uniquePCs[0]]+' note';return;}
+  notesEl.textContent='Notes: '+uniquePCs.map(pc=>NOTESF[pc]).join(', ');
+  if(uniquePCs.length===1){nameEl.textContent=NOTESF[uniquePCs[0]]+' note';return;}
   if(uniquePCs.length===2){
     const diff=(uniquePCs[1]-uniquePCs[0]+12)%12;
-    if(diff===7)nameEl.textContent=NOTES[uniquePCs[0]]+'5 (power chord)';
-    else if(diff===5)nameEl.textContent=NOTES[uniquePCs[1]]+'5 (power chord)';
+    if(diff===7)nameEl.textContent=NOTESF[uniquePCs[0]]+'5 (power chord)';
+    else if(diff===5)nameEl.textContent=NOTESF[uniquePCs[1]]+'5 (power chord)';
     else nameEl.textContent='Dyad / interval';
     return;
   }
@@ -650,14 +654,15 @@ function analyseExperiment(){
   }
   if(matches.length>0){
     const best=matches[0];
-    let cName=NOTES[best.root]+best.q;
-    if(bassPC!==best.root)cName+='/'+NOTES[bassPC];
+    let cName=NOTESF[best.root]+best.q;
+    if(bassPC!==best.root)cName+='/'+NOTESF[bassPC];
     nameEl.textContent=cName;
-    const rName=NOTES[best.root];
+    const rNameSharp=NOTES[best.root];
+    const rNameDisp=NOTESF[best.root];
     const modeName=best.mode.charAt(0).toUpperCase()+best.mode.slice(1);
-    let sHtml=`<div class="exp-sugg-card"><div class="exp-sugg-title">Explore <strong>${rName} ${modeName}</strong> harmonisation:</div>`;
+    let sHtml=`<div class="exp-sugg-card"><div class="exp-sugg-title">Explore <strong>${rNameDisp} ${modeName}</strong> harmonisation:</div>`;
     (PRESETS[best.mode]||[]).forEach(pr=>{
-      sHtml+=`<button class="sugg-prog-btn" onclick="sendExperimentToChords('${rName}','${best.mode}','${pr.d.join(' ')}')">Load: ${pr.l}</button>`;
+      sHtml+=`<button class="sugg-prog-btn" onclick="sendExperimentToChords('${rNameSharp}','${best.mode}','${pr.d.join(' ')}')">Load: ${pr.l}</button>`;
     });
     sHtml+='</div>';
     suggCont.innerHTML=sHtml;
@@ -672,6 +677,10 @@ function sendExperimentToChords(key,mode,progStr){
   buildProg(progStr.split(' '));
   savePrefs();
   showTab('chords',document.querySelector('.tab[data-tab="chords"]'));
+}
+function goHome(){
+  showTab('chords',document.querySelector('.tab[data-tab="chords"]'));
+  document.querySelector('main').scrollTo({top:0,behavior:'smooth'});
 }
 function showTab(tab,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));

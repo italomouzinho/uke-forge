@@ -57,7 +57,7 @@ function loadApp() {
   };
   const code = m[1] + `
 ;globalThis.__exports = { CHORDS, NOTES, NOTESF, DEGMAP, PRESETS,
-  getV, deg2chord, txChord, nIdx, nAt, f2s, S };`;
+  getV, deg2chord, txChord, nIdx, nAt, f2s, dispNote, S };`;
   vm.runInNewContext(code, sandbox);
   return sandbox.__exports;
 }
@@ -158,7 +158,20 @@ test('txChord shifts the root and preserves the suffix', () => {
   assert.equal(app.txChord('G7', 5), 'C7');
   assert.equal(app.txChord('F#maj7', 1), 'Gmaj7');
   assert.equal(app.txChord('Am', 0), 'Am');   // zero shift = untouched
-  assert.equal(app.txChord('Bb', 12), 'A#');  // full octave normalizes spelling only
+  assert.equal(app.txChord('Bb', 12), 'Bb');  // full octave normalizes spelling only
+});
+
+test('txChord always displays flat spellings for accidentals', () => {
+  assert.equal(app.txChord('C#', 0), 'Db');
+  assert.equal(app.txChord('G#m7', 0), 'Abm7');
+  assert.equal(app.txChord('D#', 1), 'E');
+});
+
+test('dispNote always returns flat spellings', () => {
+  assert.equal(app.dispNote('C#'), 'Db');
+  assert.equal(app.dispNote('A#'), 'Bb');
+  assert.equal(app.dispNote('Bb'), 'Bb');
+  assert.equal(app.dispNote('C'), 'C');
 });
 
 test('a full chromatic cycle of txChord returns to the start', () => {
