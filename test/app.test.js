@@ -1,4 +1,4 @@
-// Zero-dependency tests for the UkeForge inline script.
+// Zero-dependency tests for the Melodía inline script.
 // Run with: node --test
 //
 // The app is a single <script> block inside index.html. We extract it, run it

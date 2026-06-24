@@ -1,4 +1,4 @@
-# **UkeForge Chord Library — Baritone Ukulele (DGBE Tuning)**
+# **Melodía Chord Library — Baritone Ukulele (DGBE Tuning)**
 
 This file is the **canonical source of truth** for every chord diagram in index.html. All shapes were verified mathematically for standard Baritone tuning; the app's CHORDS table is generated directly from this data.
 
