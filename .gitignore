@@ -13,3 +13,6 @@ Thumbs.db
 .idea/
 *.sublime-workspace
 *.sublime-project
+
+# Claude Code agent runtime (worktree tracking, session metadata)
+.claude/
