@@ -39,7 +39,7 @@ function fakeRow() {
 }
 
 function loadApp() {
-  const m = html.match(/<script>([\s\S]*)<\/script>/);
+  const m = html.match(/<script>([\s\S]*?)<\/script>/);
   assert.ok(m, 'index.html must contain an inline <script> block');
   const store = new Map();
   const sandbox = {
