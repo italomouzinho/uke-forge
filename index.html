@@ -498,6 +498,60 @@ body::before {
 </div>
 <script>
 // @region:app-facade
+(function(){
+  var _perfCbs = [];
+  var _fretCbs = [];
+
+  // E2-S3: window.MelodiaApp — full §3.2 facade contract.
+  // Uses globalThis so it works in browser (globalThis===window) and VM test sandbox.
+  globalThis.MelodiaApp = {
+
+    // ── State queries ──────────────────────────────────────────────────────
+    isDrawerOpen: function() {
+      return document.getElementById('sidebar').classList.contains('open');
+    },
+    isPerfOpen: function() {
+      var el = document.getElementById('perf-overlay');
+      return el ? el.style.display !== 'none' : false;
+    },
+    isPopupOpen: function() {
+      var el = document.getElementById('tx-chord-popup');
+      return el ? el.style.display !== 'none' : false;
+    },
+    isBrowseOpen: function() {
+      var el = document.getElementById('browse-out');
+      return el ? el.style.display !== 'none' : false;
+    },
+    currentTab: function() {
+      var active = document.querySelector('.tab.on');
+      return active ? active.dataset.tab : 'chords';
+    },
+
+    // ── Actions ────────────────────────────────────────────────────────────
+    closeDrawer: function() { closeDrawer(); },
+    exitPerformance: function() { exitPerformance(); },
+    hidePopup: function() { hideChordPopup(); },
+    closeBrowse: function() {
+      var out = document.getElementById('browse-out');
+      if (out) out.style.display = 'none';
+      var btn = document.getElementById('browse-toggle');
+      if (btn) btn.textContent = 'Browse all voicings';
+    },
+    showTab: function(tab) { showTab(tab); },
+
+    // ── Event subscriptions ────────────────────────────────────────────────
+    onPerfChange: function(cb) { _perfCbs.push(cb); },
+    onFretToggle: function(cb) { _fretCbs.push(cb); },
+
+    // Internal emitters — called by facade taps below
+    _emitPerfChange: function(isOpen) {
+      _perfCbs.forEach(function(cb){ try { cb(isOpen); } catch(e){} });
+    },
+    _emitFretToggle: function() {
+      _fretCbs.forEach(function(cb){ try { cb(); } catch(e){} });
+    },
+  };
+})();
 // @endregion
 const NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const NOTESF=['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
@@ -940,7 +994,7 @@ const CHORD_FORMULAS=[
   {q:'madd9',iv:[0,2,3,7],mode:'minor'},{q:'9',iv:[0,2,4,7,10],mode:'blues'},
 ];
 function clearExperiment(){expFrets=[null,null,null,null];renderExpFretboard();analyseExperiment();}
-function toggleExpFret(stringIdx,fret){expFrets[stringIdx]=expFrets[stringIdx]===fret?null:fret;expFocus={st:stringIdx,f:fret};renderExpFretboard();analyseExperiment();}
+function toggleExpFret(stringIdx,fret){expFrets[stringIdx]=expFrets[stringIdx]===fret?null:fret;expFocus={st:stringIdx,f:fret};renderExpFretboard();analyseExperiment();globalThis.MelodiaApp._emitFretToggle(); /* facade tap */}
 function renderExpFretboard(){
   const cont=document.getElementById('exp-fretboard-container');
   const hadFocus=cont.contains(document.activeElement);
@@ -1062,8 +1116,8 @@ function renderSongList(){
     card.appendChild(head);card.appendChild(meta);card.appendChild(chords);list.appendChild(card);
   });
 }
-function startPerformance(){if(SONG.length===0)return;perfIdx=0;document.getElementById('perf-overlay').style.display='flex';renderPerfSection();}
-function exitPerformance(){document.getElementById('perf-overlay').style.display='none';}
+function startPerformance(){if(SONG.length===0)return;perfIdx=0;document.getElementById('perf-overlay').style.display='flex';renderPerfSection();globalThis.MelodiaApp._emitPerfChange(true); /* facade tap */}
+function exitPerformance(){document.getElementById('perf-overlay').style.display='none';globalThis.MelodiaApp._emitPerfChange(false); /* facade tap */}
 function perfNext(){if(perfIdx<SONG.length-1){perfIdx++;renderPerfSection();}}
 function perfPrev(){if(perfIdx>0){perfIdx--;renderPerfSection();}}
 function renderPerfSection(){
