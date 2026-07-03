@@ -25,7 +25,8 @@ function fakeEl() {
     innerHTML: '', textContent: '', value: '',
     appendChild(c) { el.children.push(c); return c; },
     setAttribute() {}, removeAttribute() {},
-    addEventListener() {}, scrollIntoView() {},
+    addEventListener() {}, scrollIntoView() {}, focus() {}, contains() { return false; },
+    querySelector() { return null; },
     insertRow() { return fakeRow(); },
     createTHead() { return { insertRow: () => fakeRow() }; },
   };
@@ -47,6 +48,7 @@ function loadApp() {
       createElement: () => fakeEl(),
       querySelectorAll: () => [],
       addEventListener: () => {},
+      activeElement: null,
     },
     localStorage: {
       getItem: k => (store.has(k) ? store.get(k) : null),
