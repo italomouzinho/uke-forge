@@ -1,0 +1,23 @@
+{
+  "name": "melodia",
+  "version": "1.0.0",
+  "description": "Melodía — Baritone ukulele chord explorer",
+  "private": true,
+  "scripts": {
+    "build:www": "node scripts/build-www.mjs",
+    "sync": "npm run build:www && npx cap sync android",
+    "test": "node --test",
+    "test:e2e": "npx playwright test"
+  },
+  "devDependencies": {
+    "@capacitor-community/keep-awake": "latest",
+    "@capacitor/android": "latest",
+    "@capacitor/app": "latest",
+    "@capacitor/cli": "latest",
+    "@capacitor/core": "latest",
+    "@capacitor/haptics": "latest",
+    "@capacitor/splash-screen": "latest",
+    "@capacitor/status-bar": "latest",
+    "@playwright/test": "latest"
+  }
+}

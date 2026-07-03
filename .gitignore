@@ -4,6 +4,11 @@ node_modules/
 # Build output (assembled by scripts/build-www.mjs)
 www/
 
+# Android build outputs (keep android/ source in git, not build artifacts)
+android/.gradle/
+android/app/build/
+android/build/
+
 # Operating system files
 .DS_Store
 Thumbs.db
