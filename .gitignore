@@ -1,6 +1,9 @@
 # Node modules
 node_modules/
 
+# Build output (assembled by scripts/build-www.mjs)
+www/
+
 # Operating system files
 .DS_Store
 Thumbs.db
