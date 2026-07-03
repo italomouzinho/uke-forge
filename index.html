@@ -275,6 +275,26 @@ body::before {
     linear-gradient(160deg,#0C1C2B 0%,#0A131C 55%,#070C13 100%);
 }
 
+/* E2-S4: Glass-styled in-app confirmation modal */
+.melodia-modal-backdrop {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+}
+.melodia-modal {
+  background: rgba(15,26,38,.95);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  padding: 28px 28px 20px;
+  max-width: 340px; width: 90%;
+  box-shadow: 0 24px 48px rgba(0,0,0,.5);
+}
+.melodia-modal-msg { font-size: 15px; color: #EAF1F6; margin-bottom: 20px; line-height: 1.5; }
+.melodia-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.melodia-modal-cancel { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.10); color: #AEBDC9; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+.melodia-modal-confirm { background: #EF8434; border: none; color: #fff; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
+
 /* @endregion */
 </style>
 <!-- @region:head-pwa -->
@@ -549,6 +569,28 @@ body::before {
     },
     _emitFretToggle: function() {
       _fretCbs.forEach(function(cb){ try { cb(); } catch(e){} });
+    },
+
+    // E2-S4: Promise-based in-app modal — replaces native confirm()
+    confirm: function(msg) {
+      return new Promise(function(resolve) {
+        var backdrop = document.createElement('div');
+        backdrop.className = 'melodia-modal-backdrop';
+        backdrop.innerHTML =
+          '<div class="melodia-modal" role="dialog" aria-modal="true">' +
+            '<div class="melodia-modal-msg">' + msg + '</div>' +
+            '<div class="melodia-modal-actions">' +
+              '<button class="melodia-modal-cancel">Cancel</button>' +
+              '<button class="melodia-modal-confirm">Confirm</button>' +
+            '</div>' +
+          '</div>';
+        var cleanup = function(result) { backdrop.remove(); resolve(result); };
+        backdrop.querySelector('.melodia-modal-cancel').onclick = function() { cleanup(false); };
+        backdrop.querySelector('.melodia-modal-confirm').onclick = function() { cleanup(true); };
+        backdrop.addEventListener('keydown', function(e) { if (e.key === 'Escape') cleanup(false); });
+        document.body.appendChild(backdrop);
+        backdrop.querySelector('.melodia-modal-cancel').focus();
+      });
     },
   };
 })();
@@ -1095,7 +1137,7 @@ function addCurrentToSong(){
 function removeSongSection(i){SONG.splice(i,1);saveSong();renderSongList();}
 function moveSongSection(i,dir){const j=i+dir;if(j<0||j>=SONG.length)return;[SONG[i],SONG[j]]=[SONG[j],SONG[i]];saveSong();renderSongList();}
 function renameSongSection(i,name){SONG[i].name=name;saveSong();}
-function clearSong(){if(SONG.length&&!confirm('Clear the whole song?'))return;SONG=[];saveSong();renderSongList();}
+async function clearSong(){if(SONG.length&&!(await window.MelodiaApp.confirm('Clear the whole song?')))return;SONG=[];saveSong();renderSongList();}
 function renderSongList(){
   const list=document.getElementById('song-list'),empty=document.getElementById('song-empty');
   list.innerHTML='';empty.style.display=SONG.length?'none':'block';
