@@ -389,6 +389,8 @@ body::before {
       <div class="lbl">Set list</div>
       <button class="btn" onclick="startPerformance()" id="perform-btn">▶ Performance mode</button>
       <button class="btn ghost" onclick="clearSong()">Clear song</button>
+      <button class="btn ghost" onclick="window.MelodiaApp.exportSong()">Export song</button>
+      <button class="btn ghost" onclick="window.MelodiaApp.importSong()">Import song</button>
     </div>
     <div class="sb">
       <div class="infobar"><strong>How to use</strong><br>Build a progression on the Chords tab, then tap <strong>Add to song</strong> to save it as a section. Reorder, rename or remove sections, then start Performance mode.</div>
@@ -569,6 +571,42 @@ body::before {
     },
     _emitFretToggle: function() {
       _fretCbs.forEach(function(cb){ try { cb(); } catch(e){} });
+    },
+
+    // E2-S5: Song export — downloads melodia-song.json v1
+    exportSong: function() {
+      var data = {
+        version: 1,
+        prefs: JSON.parse(localStorage.getItem('melodia.prefs') || '{}'),
+        song: JSON.parse(localStorage.getItem('melodia.song') || '[]')
+      };
+      var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = 'melodia-song.json';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    },
+
+    // E2-S5: Song import — reads melodia-song.json v1 and reloads
+    importSong: function() {
+      var input = document.createElement('input');
+      input.type = 'file'; input.accept = '.json,application/json';
+      input.onchange = async function(e) {
+        var file = e.target.files[0]; if (!file) return;
+        try {
+          var text = await file.text();
+          var data = JSON.parse(text);
+          if (data.version !== 1 || typeof data.prefs !== 'object' || !Array.isArray(data.song))
+            throw new Error('Invalid format');
+          if (data.prefs) localStorage.setItem('melodia.prefs', JSON.stringify(data.prefs));
+          if (data.song) localStorage.setItem('melodia.song', JSON.stringify(data.song));
+          location.reload();
+        } catch(err) {
+          alert('Import failed: ' + err.message);
+        }
+      };
+      input.click();
     },
 
     // E2-S4: Promise-based in-app modal — replaces native confirm()
