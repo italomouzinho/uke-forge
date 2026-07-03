@@ -448,6 +448,10 @@ function nIdx(n){let i=NOTES.indexOf(n);if(i<0)i=NOTESF.indexOf(n);return i<0?0:
 function nAt(ri,st){return NOTES[(ri+st+120)%12];}
 function dispNote(n){return NOTESF[nIdx(n)];}
 function f2s(n){return NOTES[nIdx(n)];}
+const KEYPREF_MINOR=[false,true,false,false,true,false,true,false,true,true,false,true];
+const KEYPREF_MAJOR=[true,false,true,false,true,false,true,true,false,true,false,true];
+function keyPrefersSharp(rootIdx,mode){return(mode==='minor'?KEYPREF_MINOR:KEYPREF_MAJOR)[((rootIdx%12)+12)%12];}
+function scaleNote(n,rootIdx,mode){return keyPrefersSharp(rootIdx,mode)?f2s(n):dispNote(n);}
 
 const CHORDS={
   'A':[2,2,2,0],'Am':[2,2,1,0],'Aaug':[3,2,2,1],'Adim':[1,2,1,2],'Asus2':[2,2,0,0],'Asus4':[2,2,3,0],'A7':[2,2,2,3],'Am7':[2,2,1,3],'Amaj7':[2,2,2,4],'Aaug7':[3,2,2,3],'Adim7':[1,2,1,2],'AmMaj7':[2,1,1,0],'Am7b5':[1,2,1,3],'A9':[2,4,2,3],'Amaj9':[2,4,2,4],'A11':[0,0,0,0],'Am11':[0,2,1,3],'Am6':[2,2,1,2],'Aadd9':[2,2,0,2],'Am9':[2,2,0,5],
@@ -586,14 +590,14 @@ function buildKeyGrid(){
   const g=document.getElementById('key-grid');g.innerHTML='';
   NOTES.forEach(n=>{
     const p=document.createElement('button');p.className='kp'+(n===S.key?' on':'');
-    p.textContent=dispNote(n);
+    p.textContent=scaleNote(n,nIdx(n),S.mode);
     p.onclick=()=>{S.key=n;buildKeyGrid();savePrefs();if(document.getElementById('browse-out').style.display!=='none')renderBrowse();};
     g.appendChild(p);
   });
 }
 function setMode(m,btn){
   S.mode=m;document.querySelectorAll('#mode-row .seg').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');buildProgChips();savePrefs();
+  btn.classList.add('on');buildKeyGrid();buildProgChips();savePrefs();
 }
 function buildProgChips(){
   const el=document.getElementById('prog-chips');el.innerHTML='';
@@ -603,14 +607,15 @@ function buildPatChips(){
   const el=document.getElementById('pat-chips');el.innerHTML='';
   PATDATA.forEach(p=>{const c=document.createElement('button');c.className='chip';c.textContent=p.title;c.onclick=()=>document.getElementById(p.id)?.scrollIntoView({behavior:'smooth'});el.appendChild(c);});
 }
-function deg2chord(deg,root){
+function deg2chord(deg,root,mode){
   const map=DEGMAP[deg];if(!map)return{name:deg,deg};
+  mode=mode||S.mode;
   const ri=nIdx(root);const cr=nAt(ri,map.o);
-  let name=dispNote(cr);
+  let name=scaleNote(cr,ri,mode);
   if(map.q==='m')name+='m';else if(map.q==='7')name+='7';else if(map.q==='m7')name+='m7';else if(map.q==='dim')name+='dim';
   return{name,deg};
 }
-function buildProg(degrees){renderChords(degrees.map(d=>deg2chord(d,S.key)),degrees);}
+function buildProg(degrees){renderChords(degrees.map(d=>deg2chord(d,S.key,S.mode)),degrees);}
 function dispChordName(name){const m=name.match(/^([A-G][#b]?)(.*)/);if(!m)return name;return dispNote(m[1])+m[2];}
 function setCustomMode(m,btn){
   S.customMode=m;document.querySelectorAll('#custom-mode-row .seg').forEach(b=>b.classList.remove('on'));
@@ -630,13 +635,14 @@ function renderChords(chords,degrees,subLabel){
   document.getElementById('ch-out').style.display='block';
   collapseSidebar();
   const mL=S.mode.charAt(0).toUpperCase()+S.mode.slice(1);
-  document.getElementById('prog-title').textContent=`${dispNote(S.key)} ${mL}`;
+  const keyDisp=scaleNote(S.key,nIdx(S.key),S.mode);
+  document.getElementById('prog-title').textContent=`${keyDisp} ${mL}`;
   document.getElementById('prog-sub').textContent=subLabel!==undefined?subLabel:degrees.join('  ·  ');
-  document.getElementById('scale-lbl').textContent=`${dispNote(S.key)} ${S.mode}`;
+  document.getElementById('scale-lbl').textContent=`${keyDisp} ${S.mode}`;
   const cont=document.getElementById('chord-diagrams');cont.innerHTML='';
   chords.forEach((c,i)=>cont.appendChild(makeCard(c,degrees[i],i)));
   renderScaleStrip();
-  lastBuilt={name:`${dispNote(S.key)} ${mL}`,sub:subLabel!==undefined?subLabel:degrees.join('  ·  '),chords:chords.map(c=>({name:c.name})),degrees:degrees.slice()};
+  lastBuilt={name:`${keyDisp} ${mL}`,sub:subLabel!==undefined?subLabel:degrees.join('  ·  '),chords:chords.map(c=>({name:c.name})),degrees:degrees.slice()};
 }
 function makeCard(chord,deg,i){
   const card=document.createElement('div');card.className='cc';
@@ -713,7 +719,7 @@ function makeFretSVG(frets,name){
 function renderScaleStrip(){
   const strip=document.getElementById('scale-strip');strip.innerHTML='';
   const ri=nIdx(S.key);const sc=(SCALEPAT[S.mode]||SCALEPAT.minor).map(o=>nAt(ri,o));
-  NOTES.forEach(n=>{const el=document.createElement('div');el.className='sn';if(n===S.key)el.className+=' root';else if(sc.includes(n))el.className+=' in';el.textContent=dispNote(n);strip.appendChild(el);});
+  NOTES.forEach(n=>{const el=document.createElement('div');el.className='sn';if(n===S.key)el.className+=' root';else if(sc.includes(n))el.className+=' in';el.textContent=scaleNote(n,ri,S.mode);strip.appendChild(el);});
 }
 
 function renderPatterns(){
