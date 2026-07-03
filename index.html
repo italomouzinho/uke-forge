@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Melodía — Baritone</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -224,6 +224,77 @@ main{overflow-y:auto;padding:28px 32px;}
   .perf-chords{gap:16px;}
 }
 /* @region:css-android */
+
+/* E2-S1: Touch targets ≥ 44px on mobile */
+@media (max-width: 860px) {
+  /* Key grid buttons — expand to min 44×44 */
+  .kp { min-height: 44px; min-width: 44px; }
+
+  /* Mode segment buttons */
+  .seg { min-height: 44px; }
+
+  /* Chord chips */
+  .chip { min-height: 44px; padding: 12px 10px; }
+
+  /* Nav tabs — padding increase only, no font/border change */
+  .tab { padding: 8px 10px; min-height: 44px; }
+
+  /* Icon buttons (30×30 visual) — ::after expands hit area to 44×44 */
+  .ibtn { position: relative; }
+  .ibtn::after { content: ''; position: absolute; inset: -7px; }
+
+  /* Chord play button (26×26 visual) — ::after expands hit area */
+  .cc-play { position: relative; }
+  .cc-play::after { content: ''; position: absolute; inset: -9px; }
+
+  /* Song card action buttons (26×26 visual) — ::after expands hit area */
+  .song-card-actions button { position: relative; }
+  .song-card-actions button::after { content: ''; position: absolute; inset: -9px; }
+}
+
+/* E2-S2: Safe-area insets for notched/punched-hole devices */
+header { padding-top: env(safe-area-inset-top, 0px); padding-left: calc(20px + env(safe-area-inset-left, 0px)); padding-right: calc(20px + env(safe-area-inset-right, 0px)); }
+aside, .drawer { padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); }
+.perf-overlay { padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+main { padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px)); }
+
+/* Use 100dvh universally — overrides the 100vh rule above */
+.app { height: 100dvh; }
+
+/* Fix background-attachment:fixed WebView jank — replace with fixed-position pseudo-element */
+body { background: none !important; }
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 110% at 12% 6%,rgba(34,150,180,.30),transparent 50%),
+    radial-gradient(125% 120% at 92% 96%,rgba(232,110,40,.40),transparent 52%),
+    linear-gradient(160deg,#0C1C2B 0%,#0A131C 55%,#070C13 100%);
+}
+
+/* E2-S4: Glass-styled in-app confirmation modal */
+.melodia-modal-backdrop {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+}
+.melodia-modal {
+  background: rgba(15,26,38,.95);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  padding: 28px 28px 20px;
+  max-width: 340px; width: 90%;
+  box-shadow: 0 24px 48px rgba(0,0,0,.5);
+}
+.melodia-modal-msg { font-size: 15px; color: #EAF1F6; margin-bottom: 20px; line-height: 1.5; }
+.melodia-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.melodia-modal-cancel { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.10); color: #AEBDC9; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+.melodia-modal-confirm { background: #EF8434; border: none; color: #fff; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
+
 /* @endregion */
 </style>
 <!-- @region:head-pwa -->
@@ -318,6 +389,8 @@ main{overflow-y:auto;padding:28px 32px;}
       <div class="lbl">Set list</div>
       <button class="btn" onclick="startPerformance()" id="perform-btn">▶ Performance mode</button>
       <button class="btn ghost" onclick="clearSong()">Clear song</button>
+      <button class="btn ghost" onclick="window.MelodiaApp.exportSong()">Export song</button>
+      <button class="btn ghost" onclick="window.MelodiaApp.importSong()">Import song</button>
     </div>
     <div class="sb">
       <div class="infobar"><strong>How to use</strong><br>Build a progression on the Chords tab, then tap <strong>Add to song</strong> to save it as a section. Reorder, rename or remove sections, then start Performance mode.</div>
@@ -447,6 +520,118 @@ main{overflow-y:auto;padding:28px 32px;}
 </div>
 <script>
 // @region:app-facade
+(function(){
+  var _perfCbs = [];
+  var _fretCbs = [];
+
+  // E2-S3: window.MelodiaApp — full §3.2 facade contract.
+  // Uses globalThis so it works in browser (globalThis===window) and VM test sandbox.
+  globalThis.MelodiaApp = {
+
+    // ── State queries ──────────────────────────────────────────────────────
+    isDrawerOpen: function() {
+      return document.getElementById('sidebar').classList.contains('open');
+    },
+    isPerfOpen: function() {
+      var el = document.getElementById('perf-overlay');
+      return el ? el.style.display !== 'none' : false;
+    },
+    isPopupOpen: function() {
+      var el = document.getElementById('tx-chord-popup');
+      return el ? el.style.display !== 'none' : false;
+    },
+    isBrowseOpen: function() {
+      var el = document.getElementById('browse-out');
+      return el ? el.style.display !== 'none' : false;
+    },
+    currentTab: function() {
+      var active = document.querySelector('.tab.on');
+      return active ? active.dataset.tab : 'chords';
+    },
+
+    // ── Actions ────────────────────────────────────────────────────────────
+    closeDrawer: function() { closeDrawer(); },
+    exitPerformance: function() { exitPerformance(); },
+    hidePopup: function() { hideChordPopup(); },
+    closeBrowse: function() {
+      var out = document.getElementById('browse-out');
+      if (out) out.style.display = 'none';
+      var btn = document.getElementById('browse-toggle');
+      if (btn) btn.textContent = 'Browse all voicings';
+    },
+    showTab: function(tab) { showTab(tab); },
+
+    // ── Event subscriptions ────────────────────────────────────────────────
+    onPerfChange: function(cb) { _perfCbs.push(cb); },
+    onFretToggle: function(cb) { _fretCbs.push(cb); },
+
+    // Internal emitters — called by facade taps below
+    _emitPerfChange: function(isOpen) {
+      _perfCbs.forEach(function(cb){ try { cb(isOpen); } catch(e){} });
+    },
+    _emitFretToggle: function() {
+      _fretCbs.forEach(function(cb){ try { cb(); } catch(e){} });
+    },
+
+    // E2-S5: Song export — downloads melodia-song.json v1
+    exportSong: function() {
+      var data = {
+        version: 1,
+        prefs: JSON.parse(localStorage.getItem('melodia.prefs') || '{}'),
+        song: JSON.parse(localStorage.getItem('melodia.song') || '[]')
+      };
+      var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = 'melodia-song.json';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    },
+
+    // E2-S5: Song import — reads melodia-song.json v1 and reloads
+    importSong: function() {
+      var input = document.createElement('input');
+      input.type = 'file'; input.accept = '.json,application/json';
+      input.onchange = async function(e) {
+        var file = e.target.files[0]; if (!file) return;
+        try {
+          var text = await file.text();
+          var data = JSON.parse(text);
+          if (data.version !== 1 || typeof data.prefs !== 'object' || !Array.isArray(data.song))
+            throw new Error('Invalid format');
+          if (data.prefs) localStorage.setItem('melodia.prefs', JSON.stringify(data.prefs));
+          if (data.song) localStorage.setItem('melodia.song', JSON.stringify(data.song));
+          location.reload();
+        } catch(err) {
+          alert('Import failed: ' + err.message);
+        }
+      };
+      input.click();
+    },
+
+    // E2-S4: Promise-based in-app modal — replaces native confirm()
+    confirm: function(msg) {
+      return new Promise(function(resolve) {
+        var backdrop = document.createElement('div');
+        backdrop.className = 'melodia-modal-backdrop';
+        backdrop.innerHTML =
+          '<div class="melodia-modal" role="dialog" aria-modal="true">' +
+            '<div class="melodia-modal-msg">' + msg + '</div>' +
+            '<div class="melodia-modal-actions">' +
+              '<button class="melodia-modal-cancel">Cancel</button>' +
+              '<button class="melodia-modal-confirm">Confirm</button>' +
+            '</div>' +
+          '</div>';
+        var cleanup = function(result) { backdrop.remove(); resolve(result); };
+        backdrop.querySelector('.melodia-modal-cancel').onclick = function() { cleanup(false); };
+        backdrop.querySelector('.melodia-modal-confirm').onclick = function() { cleanup(true); };
+        backdrop.addEventListener('keydown', function(e) { if (e.key === 'Escape') cleanup(false); });
+        document.body.appendChild(backdrop);
+        backdrop.querySelector('.melodia-modal-cancel').focus();
+      });
+    },
+  };
+})();
 // @endregion
 const NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const NOTESF=['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
@@ -889,7 +1074,7 @@ const CHORD_FORMULAS=[
   {q:'madd9',iv:[0,2,3,7],mode:'minor'},{q:'9',iv:[0,2,4,7,10],mode:'blues'},
 ];
 function clearExperiment(){expFrets=[null,null,null,null];renderExpFretboard();analyseExperiment();}
-function toggleExpFret(stringIdx,fret){expFrets[stringIdx]=expFrets[stringIdx]===fret?null:fret;expFocus={st:stringIdx,f:fret};renderExpFretboard();analyseExperiment();}
+function toggleExpFret(stringIdx,fret){expFrets[stringIdx]=expFrets[stringIdx]===fret?null:fret;expFocus={st:stringIdx,f:fret};renderExpFretboard();analyseExperiment();globalThis.MelodiaApp._emitFretToggle(); /* facade tap */}
 function renderExpFretboard(){
   const cont=document.getElementById('exp-fretboard-container');
   const hadFocus=cont.contains(document.activeElement);
@@ -990,7 +1175,7 @@ function addCurrentToSong(){
 function removeSongSection(i){SONG.splice(i,1);saveSong();renderSongList();}
 function moveSongSection(i,dir){const j=i+dir;if(j<0||j>=SONG.length)return;[SONG[i],SONG[j]]=[SONG[j],SONG[i]];saveSong();renderSongList();}
 function renameSongSection(i,name){SONG[i].name=name;saveSong();}
-function clearSong(){if(SONG.length&&!confirm('Clear the whole song?'))return;SONG=[];saveSong();renderSongList();}
+async function clearSong(){if(SONG.length&&!(await window.MelodiaApp.confirm('Clear the whole song?')))return;SONG=[];saveSong();renderSongList();}
 function renderSongList(){
   const list=document.getElementById('song-list'),empty=document.getElementById('song-empty');
   list.innerHTML='';empty.style.display=SONG.length?'none':'block';
@@ -1011,8 +1196,8 @@ function renderSongList(){
     card.appendChild(head);card.appendChild(meta);card.appendChild(chords);list.appendChild(card);
   });
 }
-function startPerformance(){if(SONG.length===0)return;perfIdx=0;document.getElementById('perf-overlay').style.display='flex';renderPerfSection();}
-function exitPerformance(){document.getElementById('perf-overlay').style.display='none';}
+function startPerformance(){if(SONG.length===0)return;perfIdx=0;document.getElementById('perf-overlay').style.display='flex';renderPerfSection();globalThis.MelodiaApp._emitPerfChange(true); /* facade tap */}
+function exitPerformance(){document.getElementById('perf-overlay').style.display='none';globalThis.MelodiaApp._emitPerfChange(false); /* facade tap */}
 function perfNext(){if(perfIdx<SONG.length-1){perfIdx++;renderPerfSection();}}
 function perfPrev(){if(perfIdx>0){perfIdx--;renderPerfSection();}}
 function renderPerfSection(){
