@@ -10,3 +10,11 @@ Thumbs.db
 .idea/
 *.sublime-workspace
 *.sublime-project
+
+# Capacitor www output
+www/
+
+# Android build outputs (keep android/ source in git, not build artifacts)
+android/.gradle/
+android/app/build/
+android/build/
