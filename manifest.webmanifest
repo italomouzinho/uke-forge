@@ -1,0 +1,13 @@
+{
+  "name": "Melodía",
+  "short_name": "Melodía",
+  "description": "Baritone ukulele chord explorer",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B1622",
+  "theme_color": "#0B1622",
+  "icons": [
+    { "src": "assets/icons/icon-192.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "assets/icons/icon-512.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
