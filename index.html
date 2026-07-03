@@ -120,6 +120,8 @@ main{overflow-y:auto;padding:28px 32px;}
 .cc-name{font-family:var(--font-display);font-size:1.3rem;font-weight:500;color:var(--ink);line-height:1;}
 .cc-deg{font-size:9.5px;font-weight:700;color:var(--accent2-text);letter-spacing:.1em;}
 .cc-tab{font-size:10.5px;color:var(--muted);font-family:var(--font-ui);letter-spacing:.06em;}
+.cc-play{background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent-text);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all .12s;margin-top:2px;}
+.cc-play:hover{background:var(--accent2-soft);border-color:var(--accent2-line);color:var(--accent2-text);}
 .scale-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;}
 .sn{font-size:10px;font-weight:600;padding:3px 7px;border-radius:4px;border:1px solid var(--hair);color:var(--muted);background:var(--canvas-2);}
 .sn.root{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-text);font-weight:700;}
@@ -364,7 +366,10 @@ main{overflow-y:auto;padding:28px 32px;}
       <div class="exp-svg-wrapper" id="exp-fretboard-container"></div>
       <div class="exp-results">
         <div>
-          <div class="exp-chord-name" id="exp-chord-name" aria-live="polite">Awaiting input</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="exp-chord-name" id="exp-chord-name" aria-live="polite">Awaiting input</div>
+            <button class="cc-play" id="exp-play-btn" aria-label="Play current voicing" onclick="playVoicing(expFrets)" style="display:none;">♪</button>
+          </div>
           <div class="exp-notes-played" id="exp-notes" aria-live="polite">Notes: —</div>
         </div>
         <div id="exp-suggestions-container"></div>
@@ -447,6 +452,27 @@ const KEYPREF_MINOR=[false,true,false,false,true,false,true,false,true,true,fals
 const KEYPREF_MAJOR=[true,false,true,false,true,false,true,true,false,true,false,true];
 function keyPrefersSharp(rootIdx,mode){return(mode==='minor'?KEYPREF_MINOR:KEYPREF_MAJOR)[((rootIdx%12)+12)%12];}
 function scaleNote(n,rootIdx,mode){return keyPrefersSharp(rootIdx,mode)?f2s(n):dispNote(n);}
+
+let audioCtx=null;
+const OPEN_FREQ=[146.832,195.998,246.942,329.628];
+function playVoicing(frets){
+  if(frets.every(f=>f===null))return;
+  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended')audioCtx.resume();
+  const now=audioCtx.currentTime;
+  frets.forEach((f,i)=>{
+    if(f===null)return;
+    const freq=OPEN_FREQ[i]*Math.pow(2,f/12);
+    const start=now+i*0.02;
+    const osc=audioCtx.createOscillator();osc.type='triangle';osc.frequency.value=freq;
+    const gain=audioCtx.createGain();
+    gain.gain.setValueAtTime(0,start);
+    gain.gain.linearRampToValueAtTime(0.22,start+0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001,start+1.1);
+    osc.connect(gain);gain.connect(audioCtx.destination);
+    osc.start(start);osc.stop(start+1.15);
+  });
+}
 
 const CHORDS={
   'A':[2,2,2,0],'Am':[2,2,1,0],'Aaug':[3,2,2,1],'Adim':[1,2,1,2],'Asus2':[2,2,0,0],'Asus4':[2,2,3,0],'A7':[2,2,2,3],'Am7':[2,2,1,3],'Amaj7':[2,2,2,4],'Aaug7':[3,2,2,3],'Adim7':[1,2,1,2],'AmMaj7':[2,1,1,0],'Am7b5':[1,2,1,3],'A9':[2,4,2,3],'Amaj9':[2,4,2,4],'A11':[0,0,0,0],'Am11':[0,2,1,3],'Am6':[2,2,1,2],'Aadd9':[2,2,0,2],'Am9':[2,2,0,5],
@@ -646,6 +672,12 @@ function renderChords(chords,degrees,subLabel){
   renderScaleStrip();
   lastBuilt={name:`${keyDisp} ${mL}`,sub:subLabel!==undefined?subLabel:degrees.join('  ·  '),chords:chords.map(c=>({name:c.name})),degrees:degrees.slice()};
 }
+function addPlayButton(card,v){
+  const play=document.createElement('button');play.type='button';play.className='cc-play';
+  play.setAttribute('aria-label','Play chord');play.textContent='♪';
+  play.onclick=(e)=>{e.stopPropagation();playVoicing(v);};
+  card.appendChild(play);
+}
 function makeCard(chord,deg,i){
   const card=document.createElement('div');card.className='cc';
   if(i!==undefined)card.style.animationDelay=(i*.04)+'s';
@@ -654,6 +686,7 @@ function makeCard(chord,deg,i){
   const v=getV(chord.name);
   const fw=document.createElement('div');fw.style.marginTop='2px';fw.innerHTML=makeFretSVG(v,chord.name);card.appendChild(fw);
   const tab=document.createElement('div');tab.className='cc-tab';tab.textContent=v.map(f=>f===null?'×':f).join(' ');card.appendChild(tab);
+  addPlayButton(card,v);
   return card;
 }
 function toggleBrowse(){
@@ -681,7 +714,9 @@ function renderBrowse(){
     const nm=document.createElement('div');nm.className='cc-name';nm.textContent=name;
     const fw=document.createElement('div');fw.style.marginTop='2px';fw.innerHTML=makeFretSVG(v,name);
     const tab=document.createElement('div');tab.className='cc-tab';tab.textContent=v.map(f=>f===null?'×':f).join(' ');
-    card.appendChild(nm);card.appendChild(fw);card.appendChild(tab);grid.appendChild(card);
+    card.appendChild(nm);card.appendChild(fw);card.appendChild(tab);
+    addPlayButton(card,v);
+    grid.appendChild(card);
   });
 }
 function addToProgression(name){
@@ -774,6 +809,7 @@ function showChordPopup(e,name){
   const fw=document.createElement('div');fw.style.marginTop='2px';fw.innerHTML=makeFretSVG(v,name);
   const tab=document.createElement('div');tab.className='cc-tab';tab.textContent=v.map(f=>f===null?'×':f).join(' ');
   popup.appendChild(nm);popup.appendChild(fw);popup.appendChild(tab);
+  addPlayButton(popup,v);
   popup.style.display='block';
   popup.style.left=Math.min(e.clientX,window.innerWidth-120)+'px';
   popup.style.top=Math.min(e.clientY+12,window.innerHeight-170)+'px';
@@ -881,9 +917,10 @@ function analyseExperiment(){
   const PC=[nIdx('D'),nIdx('G'),nIdx('B'),nIdx('E')],BS=[0,5,9,14];
   let active=[];
   for(let i=0;i<4;i++){if(expFrets[i]!==null)active.push({pc:(PC[i]+expFrets[i])%12,pitch:BS[i]+expFrets[i]});}
-  const nameEl=document.getElementById('exp-chord-name'),notesEl=document.getElementById('exp-notes');
+  const nameEl=document.getElementById('exp-chord-name'),notesEl=document.getElementById('exp-notes'),playBtn=document.getElementById('exp-play-btn');
   const suggCont=document.getElementById('exp-suggestions-container'),neighCont=document.getElementById('exp-neighbors-container');
   suggCont.innerHTML='';neighCont.innerHTML='';expCurrentChord=null;
+  playBtn.style.display=active.length===0?'none':'flex';
   if(active.length===0){nameEl.textContent='Awaiting input';notesEl.textContent='Notes: —';return;}
   active.sort((a,b)=>a.pitch-b.pitch);
   const bassPC=active[0].pc,uniquePCs=[...new Set(active.map(n=>n.pc))];
