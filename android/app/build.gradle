@@ -1,5 +1,14 @@
 apply plugin: 'com.android.application'
 
+// Derive versionName and versionCode from package.json so the Android
+// release version always tracks the npm package version automatically.
+// Release workflow: npm version patch|minor|major  →  npm run sync  →  ./gradlew bundleRelease
+def pkg = new groovy.json.JsonSlurper().parse(file('../../package.json'))
+def pkgVersion = pkg.version as String          // e.g. "1.2.3"
+def (verMajor, verMinor, verPatch) = pkgVersion.tokenize('.').collect { it.toInteger() }
+// versionCode: MMMNNPP (max 2100000000) — sufficient for semver up to 999.99.99
+def derivedVersionCode = verMajor * 10000 + verMinor * 100 + verPatch
+
 android {
     namespace = "com.italomouzinho.melodia"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +16,8 @@ android {
         applicationId "com.italomouzinho.melodia"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode derivedVersionCode
+        versionName pkgVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
