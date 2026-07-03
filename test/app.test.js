@@ -191,3 +191,136 @@ test('deg2chord produces correct names for the harmonic-minor staples', () => {
   assert.deepEqual(J(app.deg2chord('VI', 'A')), { name: 'F', deg: 'VI' });
   assert.deepEqual(J(app.deg2chord('IV', 'C')), { name: 'F', deg: 'IV' });
 });
+
+// ============================================================
+// E5-S2 additions — key spelling, schema validation, back-stack
+// ============================================================
+
+// Load additional exports (keyPrefersSharp, scaleNote) from the same script.
+// We cannot modify the existing loadApp() call above, so we create a second loader.
+function loadAppExtended() {
+  const m = html.match(/<script>([\s\S]*)<\/script>/);
+  assert.ok(m, 'index.html must contain an inline <script> block');
+  const store = new Map();
+  const sandbox = {
+    document: {
+      getElementById: () => fakeEl(),
+      createElement: () => fakeEl(),
+      querySelectorAll: () => [],
+      addEventListener: () => {},
+      activeElement: null,
+    },
+    localStorage: {
+      getItem: k => (store.has(k) ? store.get(k) : null),
+      setItem: (k, v) => store.set(k, String(v)),
+      removeItem: k => store.delete(k),
+    },
+    navigator: {},
+    console,
+  };
+  const code = m[1] + `
+;globalThis.__exports2 = { keyPrefersSharp, scaleNote, nIdx, f2s, dispNote };`;
+  vm.runInNewContext(code, sandbox);
+  return sandbox.__exports2;
+}
+
+const app2 = loadAppExtended();
+
+// ---- Key spelling (keyPrefersSharp / scaleNote) ----
+test('E minor key prefers sharps: scaleNote returns F# not Gb', () => {
+  const rootIdx = app2.nIdx('E'); // 4
+  assert.equal(app2.scaleNote('F#', rootIdx, 'minor'), 'F#');
+  assert.equal(app2.scaleNote('Gb', rootIdx, 'minor'), 'F#');
+});
+
+test('Bb major key prefers flats: scaleNote returns Eb not D#', () => {
+  const rootIdx = app2.nIdx('Bb'); // 10
+  assert.equal(app2.scaleNote('D#', rootIdx, 'major'), 'Eb');
+  assert.equal(app2.scaleNote('Eb', rootIdx, 'major'), 'Eb');
+});
+
+test('G major key prefers sharps: scaleNote returns F# not Gb', () => {
+  const rootIdx = app2.nIdx('G'); // 7
+  assert.equal(app2.scaleNote('F#', rootIdx, 'major'), 'F#');
+  assert.equal(app2.scaleNote('Gb', rootIdx, 'major'), 'F#');
+});
+
+test('F major key prefers flats: scaleNote returns Bb not A#', () => {
+  const rootIdx = app2.nIdx('F'); // 5
+  assert.equal(app2.scaleNote('A#', rootIdx, 'major'), 'Bb');
+  assert.equal(app2.scaleNote('Bb', rootIdx, 'major'), 'Bb');
+});
+
+// ---- Export/import schema validation (E2-S5) ----
+// Pure logic test: validate a song export object shape.
+// Valid schema: { version: 1, prefs: {}, song: [] }
+function validateExport(obj) {
+  if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) return false;
+  if (!('version' in obj)) return false;
+  if (obj.version !== 1) return false;
+  if (!Array.isArray(obj.song)) return false;
+  if (typeof obj.prefs !== 'object' || obj.prefs === null || Array.isArray(obj.prefs)) return false;
+  return true;
+}
+
+test('export schema: valid object passes validation', () => {
+  assert.equal(validateExport({ version: 1, prefs: {}, song: [] }), true);
+  assert.equal(validateExport({ version: 1, prefs: { key: 'C' }, song: [{ name: 'Verse' }] }), true);
+});
+
+test('export schema: missing version field fails', () => {
+  assert.equal(validateExport({ prefs: {}, song: [] }), false);
+});
+
+test('export schema: version !== 1 fails', () => {
+  assert.equal(validateExport({ version: 2, prefs: {}, song: [] }), false);
+  assert.equal(validateExport({ version: '1', prefs: {}, song: [] }), false);
+});
+
+test('export schema: non-array song field fails', () => {
+  assert.equal(validateExport({ version: 1, prefs: {}, song: {} }), false);
+  assert.equal(validateExport({ version: 1, prefs: {}, song: 'verse' }), false);
+  assert.equal(validateExport({ version: 1, prefs: {}, song: null }), false);
+});
+
+test('export schema: non-object prefs field fails', () => {
+  assert.equal(validateExport({ version: 1, prefs: [], song: [] }), false);
+  assert.equal(validateExport({ version: 1, prefs: 'default', song: [] }), false);
+  assert.equal(validateExport({ version: 1, prefs: null, song: [] }), false);
+});
+
+// ---- Back-facade state transitions (pure logic, no DOM) ----
+// Priority order: drawer > perf overlay > popup > browse panel.
+// Each back() call should close the highest-priority open layer.
+function backAction(state) {
+  if (state.drawer)  return 'closeDrawer';
+  if (state.perf)    return 'exitPerf';
+  if (state.popup)   return 'hidePopup';
+  if (state.browse)  return 'closeBrowse';
+  return 'none';
+}
+
+test('back-stack: drawer takes priority over perf', () => {
+  const state = { drawer: true, perf: true, popup: false, browse: false };
+  assert.equal(backAction(state), 'closeDrawer');
+});
+
+test('back-stack: perf takes priority when drawer is closed', () => {
+  const state = { drawer: false, perf: true, popup: true, browse: false };
+  assert.equal(backAction(state), 'exitPerf');
+});
+
+test('back-stack: popup takes priority when drawer and perf are closed', () => {
+  const state = { drawer: false, perf: false, popup: true, browse: true };
+  assert.equal(backAction(state), 'hidePopup');
+});
+
+test('back-stack: browse closes after popup is gone', () => {
+  const state = { drawer: false, perf: false, popup: false, browse: true };
+  assert.equal(backAction(state), 'closeBrowse');
+});
+
+test('back-stack: no action when all overlays closed', () => {
+  const state = { drawer: false, perf: false, popup: false, browse: false };
+  assert.equal(backAction(state), 'none');
+});
