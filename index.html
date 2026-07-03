@@ -110,7 +110,7 @@ main{overflow-y:auto;padding:28px 32px;}
 .panel{display:none;}
 .panel.on{display:block;}
 .prog-title{font-family:var(--newsreader);font-size:2.2rem;font-weight:500;color:var(--petrol-deep);margin-bottom:4px;line-height:1.1;}
-.prog-sub{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:28px;}
+.prog-sub{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.12em;margin-bottom:28px;}
 .chord-row{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:32px;}
 .cc{
   display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 12px;
@@ -120,7 +120,7 @@ main{overflow-y:auto;padding:28px 32px;}
 .cc:hover{border-color:var(--petrol-line);}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
 .cc-name{font-family:var(--newsreader);font-size:1.3rem;font-weight:500;color:var(--ink);line-height:1;}
-.cc-deg{font-size:9.5px;font-weight:700;color:var(--brass-deep);letter-spacing:.1em;text-transform:uppercase;}
+.cc-deg{font-size:9.5px;font-weight:700;color:var(--brass-deep);letter-spacing:.1em;}
 .cc-tab{font-size:10.5px;color:var(--muted);font-family:var(--manrope);letter-spacing:.06em;}
 .scale-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;}
 .sn{font-size:10px;font-weight:600;padding:3px 7px;border-radius:4px;border:1px solid var(--hair);color:var(--muted);background:var(--canvas-2);}
@@ -447,21 +447,22 @@ const NOTESF=['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
 function nIdx(n){let i=NOTES.indexOf(n);if(i<0)i=NOTESF.indexOf(n);return i<0?0:i;}
 function nAt(ri,st){return NOTES[(ri+st+120)%12];}
 function dispNote(n){return NOTESF[nIdx(n)];}
+function f2s(n){return NOTES[nIdx(n)];}
 
 const CHORDS={
-  'A':[2,2,2,0],'Am':[2,2,1,0],'Aaug':[3,2,2,1],'Adim':[1,2,1,null],'Asus2':[2,2,0,0],'Asus4':[2,2,3,0],'A7':[2,0,2,0],'Am7':[2,0,1,0],'Amaj7':[2,1,2,0],'Aaug7':[3,2,2,3],'Adim7':[1,2,1,2],'AmMaj7':[2,1,1,0],'Am7b5':[1,2,1,3],'A9':[5,4,2,5],'Amaj9':[6,6,0,5],'A11':[0,2,2,3],'Am11':[0,2,1,3],'Am6':[2,2,1,2],'Aadd9':[2,4,2,0],'Am9':[2,2,0,5],
-  'A#':[3,3,3,1],'Bb':[3,3,3,1],'A#m':[3,3,2,1],'Bbm':[3,3,2,1],'A#aug':[0,3,3,2],'Bbaug':[0,3,3,2],'A#dim':[2,3,2,0],'Bbdim':[2,3,2,0],'A#sus2':[3,3,1,1],'Bbsus2':[3,3,1,1],'A#sus4':[3,3,4,1],'Bbsus4':[3,3,4,1],'A#7':[3,1,3,1],'Bb7':[3,1,3,1],'A#m7':[3,3,2,4],'Bbm7':[3,3,2,4],'A#maj7':[3,3,3,5],'Bbmaj7':[3,3,3,5],'A#dim7':[2,3,2,3],'Bbdim7':[2,3,2,3],'A#m7b5':[2,3,2,4],'Bbm7b5':[2,3,2,4],'A#9':[3,1,1,1],'Bb9':[3,1,1,1],'A#maj9':[0,3,1,1],'Bbmaj9':[0,3,1,1],'A#11':[1,1,1,1],'Bb11':[1,1,1,1],'A#13':[3,1,3,1],'Bb13':[3,1,3,1],'A#add9':[0,3,1,1],'Bbadd9':[0,3,1,1],
-  'B':[4,4,4,2],'Bm':[4,4,3,2],'Baug':[null,4,4,3],'Bdim':[null,4,3,1],'Bsus2':[4,4,2,2],'Bsus4':[2,4,5,2],'B7':[1,2,0,2],'Bm7':[0,2,0,2],'Bmaj7':[1,4,0,2],'Baug7':[1,4,0,3],'Bdim7':[3,4,3,4],'BmMaj7':[4,3,3,2],'Bm7b5':[0,2,0,1],'B9':[4,2,2,2],'Bmaj9':[4,3,2,2],'B11':[1,2,0,0],'B13':[1,2,0,4],'Bm6':[4,4,3,4],'Bm9':[0,6,0,5],'Badd9':[1,4,2,2],
-  'C':[2,0,1,0],'Cm':[5,5,4,3],'Caug':[2,1,1,0],'Cdim':[null,5,4,2],'Csus2':[0,0,1,3],'Csus4':[3,0,1,1],'C7':[2,3,1,3],'Cm7':[5,5,4,6],'Cmaj7':[2,4,1,3],'Caug7':[2,3,1,4],'Cdim7':[1,2,1,2],'CmMaj7':[5,4,4,3],'Cm7b5':[1,3,1,2],'C9':[2,3,1,0],'Cmaj9':[2,0,0,0],'C11':[3,3,1,0],'Cm11':[5,3,4,3],'Cadd9':[0,0,1,0],
-  'C#':[3,1,2,1],'Db':[3,1,2,1],'C#m':[2,1,2,0],'Dbm':[2,1,2,0],'C#aug':[null,2,2,1],'Dbaug':[null,2,2,1],'C#dim':[2,0,2,0],'Dbdim':[2,0,2,0],'C#sus2':[6,6,4,4],'Dbsus2':[6,6,4,4],'C#sus4':[4,6,7,4],'Dbsus4':[4,6,7,4],'C#7':[3,4,2,4],'Db7':[3,4,2,4],'C#m7':[6,6,0,0],'Dbm7':[6,6,0,0],'C#maj7':[3,5,2,4],'Dbmaj7':[3,5,2,4],'C#aug7':[3,4,2,5],'Dbaug7':[3,4,2,5],'C#dim7':[2,3,2,3],'Dbdim7':[2,3,2,3],'C#mMaj7':[6,5,5,4],'DbmMaj7':[6,5,5,4],'C#m7b5':[2,4,2,3],'Dbm7b5':[2,4,2,3],'C#9':[6,4,4,4],'Db9':[6,4,4,4],'C#maj9':[6,5,4,4],'Dbmaj9':[6,5,4,4],'C#11':[4,4,4,4],'Db11':[4,4,4,4],'C#13':[3,4,2,6],'Db13':[3,4,2,6],'C#add9':[1,1,2,1],'Dbadd9':[1,1,2,1],
-  'D':[0,2,3,2],'Dm':[0,2,3,1],'Daug':[0,3,3,2],'Ddim':[0,1,3,1],'Dsus2':[0,2,3,0],'Dsus4':[0,2,3,3],'D7':[0,2,1,2],'Dm7':[0,2,1,1],'Dmaj7':[0,2,2,2],'Daug7':[0,3,1,2],'Ddim7':[0,1,0,1],'DmMaj7':[0,2,2,1],'Dm7b5':[0,1,1,1],'D9':[2,2,1,2],'Dmaj9':[2,2,2,2],'D11':[2,0,1,2],'Dm11':[2,0,1,1],'Dadd9':[2,2,3,2],
-  'D#':[5,3,4,3],'Eb':[5,3,4,3],'D#m':[1,3,4,2],'Ebm':[1,3,4,2],'D#aug':[5,4,4,3],'Ebaug':[5,4,4,3],'D#dim':[null,2,4,2],'Ebdim':[null,2,4,2],'D#sus2':[null,3,4,1],'Ebsus2':[null,3,4,1],'D#sus4':[1,3,4,4],'Ebsus4':[1,3,4,4],'D#7':[5,6,4,6],'Eb7':[5,6,4,6],'D#m7':[1,3,2,2],'Ebm7':[1,3,2,2],'D#maj7':[1,3,3,3],'Ebmaj7':[1,3,3,3],'D#aug7':[1,4,2,3],'Ebaug7':[1,4,2,3],'D#dim7':[4,5,4,5],'Ebdim7':[4,5,4,5],'D#mMaj7':[4,3,3,2],'EbmMaj7':[4,3,3,2],'D#m7b5':[1,2,2,2],'Ebm7b5':[1,2,2,2],'D#9':[1,0,2,1],'Eb9':[1,0,2,1],'D#maj9':[1,3,3,1],'Ebmaj9':[1,3,3,1],'D#11':[1,0,2,1],'Eb11':[1,0,2,1],'D#m11':[1,1,2,2],'Ebm11':[1,1,2,2],'D#add9':[3,3,4,3],'Ebadd9':[3,3,4,3],
-  'E':[2,1,0,0],'Em':[2,0,0,0],'Eaug':[null,1,1,0],'Edim':[2,3,null,3],'Esus2':[4,4,0,2],'Esus4':[2,2,0,0],'E7':[2,4,3,4],'Em7':[2,0,3,0],'Emaj7':[1,1,0,0],'Eaug7':[0,1,1,0],'Edim7':[2,3,2,3],'EmMaj7':[1,0,0,0],'Em7b5':[2,3,3,3],'E9':[2,1,3,2],'Emaj9':[2,1,4,2],'E11':[2,2,3,2],'Em11':[2,2,3,0],'Eadd9':[2,1,0,2],
-  'F':[3,2,1,1],'Fm':[3,1,1,1],'Faug':[3,2,2,1],'Fdim':[3,1,0,1],'Fsus2':[3,0,1,1],'Fsus4':[3,3,1,1],'F7':[1,2,1,1],'Fm7':[1,1,1,1],'Fmaj7':[3,2,1,0],'Faug7':[1,2,2,1],'Fdim7':[0,1,0,1],'FmMaj7':[3,1,1,0],'Fm7b5':[1,1,0,1],'F9':[3,2,1,3],'Fmaj9':[2,2,1,3],'F11':[3,3,1,3],'Fm11':[1,1,1,1],'Fadd9':[3,2,1,3],
-  'F#':[4,3,2,2],'Gb':[4,3,2,2],'F#m':[4,2,2,2],'Gbm':[4,2,2,2],'F#aug':[4,3,3,2],'Gbaug':[4,3,3,2],'F#dim':[4,2,1,2],'Gbdim':[4,2,1,2],'F#sus2':[4,1,2,2],'Gbsus2':[4,1,2,2],'F#sus4':[4,4,2,2],'Gbsus4':[4,4,2,2],'F#7':[2,3,2,2],'Gb7':[2,3,2,2],'F#m7':[2,2,2,2],'Gbm7':[2,2,2,2],'F#maj7':[4,6,6,6],'Gbmaj7':[4,6,6,6],'F#aug7':[2,3,3,2],'Gbaug7':[2,3,3,2],'F#dim7':[1,2,1,2],'Gbdim7':[1,2,1,2],'F#mMaj7':[4,2,2,1],'GbmMaj7':[4,2,2,1],'F#m7b5':[7,9,7,8],'Gbm7b5':[7,9,7,8],'F#9':[2,3,2,2],'Gb9':[2,3,2,2],'F#maj9':[4,3,2,4],'Gbmaj9':[4,3,2,4],'F#11':[4,4,2,4],'Gb11':[4,4,2,4],'F#m11':[2,2,2,4],'Gbm11':[2,2,2,4],'F#add9':[4,3,2,4],'Gbadd9':[4,3,2,4],
-  'G':[0,0,0,3],'Gm':[0,3,3,3],'Gaug':[1,0,0,3],'Gdim':[null,3,2,3],'Gsus2':[0,0,3,3],'Gsus4':[0,0,1,3],'G7':[0,0,0,1],'Gm7':[3,3,3,1],'Gmaj7':[0,0,0,2],'Gaug7':[1,0,0,1],'Gdim7':[2,3,2,0],'GmMaj7':[0,3,3,2],'Gm7b5':[3,3,2,3],'G9':[0,2,0,1],'Gmaj9':[0,2,0,2],'G11':[0,0,1,1],'Gm11':[3,3,1,3],'Gm13':[2,3,3,3],'Gadd9':[0,2,0,3],
-  'G#':[6,5,4,4],'Ab':[6,5,4,4],'G#m':[6,4,4,4],'Abm':[6,4,4,4],'G#aug':[6,5,5,4],'Abaug':[6,5,5,4],'G#dim':[6,4,3,4],'Abdim':[6,4,3,4],'G#sus2':[6,3,4,4],'Absus2':[6,3,4,4],'G#sus4':[6,6,4,4],'Absus4':[6,6,4,4],'G#7':[4,5,4,4],'Ab7':[4,5,4,4],'G#m7':[4,4,4,4],'Abm7':[4,4,4,4],'G#maj7':[6,8,8,8],'Abmaj7':[6,8,8,8],'G#aug7':[2,1,1,2],'Abaug7':[2,1,1,2],'G#dim7':[0,1,0,1],'Abdim7':[0,1,0,1],'G#mMaj7':[6,4,4,3],'AbmMaj7':[6,4,4,3],'G#m7b5':[4,4,3,2],'Abm7b5':[4,4,3,2],'G#9':[1,1,1,2],'Ab9':[1,1,1,2],'G#maj9':[1,1,1,3],'Abmaj9':[1,1,1,3],'G#11':[1,1,1,2],'Ab11':[1,1,1,2],'G#m11':[4,4,4,4],'Abm11':[4,4,4,4],'G#add9':[1,3,1,4],'Abadd9':[1,3,1,4],
-  'D/G':[4,2,3,3],'D/B':[0,2,0,2],'Dm/B':[3,4,3,5],'E/F':[2,1,0,1],'Gb/E':[1,1,3,2],'Ab/Gb':[4,5,4,4],'Gb/G':[4,3,2,3],'Ab/G':[1,1,1,3],'B/G':[1,0,0,2],'G/A':[7,7,8,7],'Ebdim/Db':[1,2,2,2],'Fdim/Eb':[1,1,0,1],'Em/A':[2,2,0,3],'Gm/E':[2,3,3,3],'Csus4/Bb':[3,3,1,3],'C/Bb':[2,3,1,3]
+  'A':[2,2,2,0],'Am':[2,2,1,0],'Aaug':[3,2,2,1],'Adim':[1,2,1,2],'Asus2':[2,2,0,0],'Asus4':[2,2,3,0],'A7':[2,2,2,3],'Am7':[2,2,1,3],'Amaj7':[2,2,2,4],'Aaug7':[3,2,2,3],'Adim7':[1,2,1,2],'AmMaj7':[2,1,1,0],'Am7b5':[1,2,1,3],'A9':[2,4,2,3],'Amaj9':[2,4,2,4],'A11':[0,0,0,0],'Am11':[0,2,1,3],'Am6':[2,2,1,2],'Aadd9':[2,2,0,2],'Am9':[2,2,0,5],
+  'A#':[3,3,3,1],'Bb':[3,3,3,1],'A#m':[3,3,2,1],'Bbm':[3,3,2,1],'A#aug':[4,3,3,2],'Bbaug':[4,3,3,2],'A#dim':[2,3,2,3],'Bbdim':[2,3,2,3],'A#sus2':[3,3,1,1],'Bbsus2':[3,3,1,1],'A#sus4':[3,3,4,1],'Bbsus4':[3,3,4,1],'A#7':[3,3,3,4],'Bb7':[3,3,3,4],'A#m7':[3,3,2,4],'Bbm7':[3,3,2,4],'A#maj7':[3,3,3,5],'Bbmaj7':[3,3,3,5],'A#dim7':[2,3,2,3],'Bbdim7':[2,3,2,3],'A#m7b5':[2,3,2,4],'Bbm7b5':[2,3,2,4],'A#9':[0,1,1,1],'Bb9':[0,1,1,1],'A#maj9':[0,2,1,1],'Bbmaj9':[0,2,1,1],'A#11':[3,3,4,4],'Bb11':[3,3,4,4],'A#13':[3,1,3,1],'Bb13':[3,1,3,1],'A#add9':[3,3,1,3],'Bbadd9':[3,3,1,3],
+  'B':[4,4,4,2],'Bm':[4,4,3,2],'Baug':[5,4,4,3],'Bdim':[3,4,3,4],'Bsus2':[4,4,2,2],'Bsus4':[2,4,5,2],'B7':[4,4,4,5],'Bm7':[4,4,3,5],'Bmaj7':[4,3,4,2],'Baug7':[1,4,0,3],'Bdim7':[3,4,3,4],'BmMaj7':[4,3,3,2],'Bm7b5':[0,2,0,1],'B9':[1,2,2,2],'Bmaj9':[1,3,2,2],'B11':[2,2,2,2],'B13':[1,2,0,4],'Bm6':[4,4,3,4],'Bm9':[0,6,0,5],'Badd9':[4,4,2,4],
+  'C':[2,0,1,0],'Cm':[1,0,1,3],'Caug':[2,1,1,0],'Cdim':[1,2,1,2],'Csus2':[0,0,1,3],'Csus4':[3,0,1,1],'C7':[2,3,1,0],'Cm7':[1,3,1,3],'Cmaj7':[2,4,1,3],'Caug7':[2,3,1,4],'Cdim7':[1,2,1,2],'CmMaj7':[5,4,4,3],'Cm7b5':[1,3,1,2],'C9':[0,3,1,0],'Cmaj9':[0,4,1,0],'C11':[3,3,3,3],'Cm11':[5,3,4,3],'Cadd9':[0,0,1,0],
+  'C#':[3,1,2,1],'Db':[3,1,2,1],'C#m':[2,1,2,4],'Dbm':[2,1,2,4],'C#aug':[3,2,2,1],'Dbaug':[3,2,2,1],'C#dim':[2,3,2,3],'Dbdim':[2,3,2,3],'C#sus2':[6,6,4,4],'Dbsus2':[6,6,4,4],'C#sus4':[4,6,7,4],'Dbsus4':[4,6,7,4],'C#7':[3,4,2,1],'Db7':[3,4,2,1],'C#m7':[2,4,2,4],'Dbm7':[2,4,2,4],'C#maj7':[3,5,2,1],'Dbmaj7':[3,5,2,1],'C#aug7':[3,4,2,5],'Dbaug7':[3,4,2,5],'C#dim7':[2,3,2,3],'Dbdim7':[2,3,2,3],'C#mMaj7':[6,5,5,4],'DbmMaj7':[6,5,5,4],'C#m7b5':[2,4,2,3],'Dbm7b5':[2,4,2,3],'C#9':[3,4,4,4],'Db9':[3,4,4,4],'C#maj9':[3,5,4,4],'Dbmaj9':[3,5,4,4],'C#11':[4,4,2,4],'Db11':[4,4,2,4],'C#13':[3,4,2,6],'Db13':[3,4,2,6],'C#add9':[1,1,2,1],'Dbadd9':[1,1,2,1],
+  'D':[0,2,3,2],'Dm':[0,2,3,1],'Daug':[0,3,3,2],'Ddim':[0,1,3,1],'Dsus2':[0,2,3,0],'Dsus4':[0,2,3,3],'D7':[0,2,1,2],'Dm7':[0,2,1,1],'Dmaj7':[0,2,2,2],'Daug7':[0,3,1,2],'Ddim7':[0,1,0,1],'DmMaj7':[0,2,2,1],'Dm7b5':[0,1,1,1],'D9':[0,2,1,0],'Dmaj9':[0,2,2,0],'D11':[0,0,1,0],'Dm11':[2,0,1,1],'Dadd9':[0,2,3,0],
+  'D#':[1,3,4,3],'Eb':[1,3,4,3],'D#m':[1,3,4,2],'Ebm':[1,3,4,2],'D#aug':[1,4,4,3],'Ebaug':[1,4,4,3],'D#dim':[1,2,4,2],'Ebdim':[1,2,4,2],'D#sus2':[null,3,4,1],'Ebsus2':[null,3,4,1],'D#sus4':[1,3,4,4],'Ebsus4':[1,3,4,4],'D#7':[1,3,2,3],'Eb7':[1,3,2,3],'D#m7':[1,3,2,2],'Ebm7':[1,3,2,2],'D#maj7':[1,3,3,3],'Ebmaj7':[1,3,3,3],'D#aug7':[1,4,2,3],'Ebaug7':[1,4,2,3],'D#dim7':[4,5,4,5],'Ebdim7':[4,5,4,5],'D#mMaj7':[4,3,3,2],'EbmMaj7':[4,3,3,2],'D#m7b5':[1,2,2,2],'Ebm7b5':[1,2,2,2],'D#9':[1,3,2,1],'Eb9':[1,3,2,1],'D#maj9':[1,3,3,1],'Ebmaj9':[1,3,3,1],'D#11':[1,1,2,1],'Eb11':[1,1,2,1],'D#m11':[1,1,2,2],'Ebm11':[1,1,2,2],'D#add9':[1,3,4,1],'Ebadd9':[1,3,4,1],
+  'E':[2,1,0,0],'Em':[2,0,0,0],'Eaug':[2,1,1,0],'Edim':[2,3,2,3],'Esus2':[4,4,0,2],'Esus4':[2,2,0,0],'E7':[2,1,3,0],'Em7':[2,0,3,0],'Emaj7':[1,1,0,0],'Eaug7':[0,1,1,0],'Edim7':[2,3,2,3],'EmMaj7':[1,0,0,0],'Em7b5':[2,3,3,3],'E9':[2,1,3,2],'Emaj9':[1,1,0,2],'E11':[2,2,3,2],'Em11':[2,2,3,0],'Eadd9':[2,1,0,2],
+  'F':[3,2,1,1],'Fm':[3,1,1,1],'Faug':[3,2,2,1],'Fdim':[3,4,3,4],'Fsus2':[3,0,1,1],'Fsus4':[3,3,1,1],'F7':[3,2,4,1],'Fm7':[1,1,1,1],'Fmaj7':[2,2,1,1],'Faug7':[1,2,2,1],'Fdim7':[0,1,0,1],'FmMaj7':[3,1,1,0],'Fm7b5':[1,1,0,1],'F9':[1,2,1,3],'Fmaj9':[2,2,1,3],'F11':[1,3,1,1],'Fm11':[1,1,1,1],'Fadd9':[3,2,1,3],
+  'F#':[4,3,2,2],'Gb':[4,3,2,2],'F#m':[4,2,2,2],'Gbm':[4,2,2,2],'F#aug':[4,3,3,2],'Gbaug':[4,3,3,2],'F#dim':[4,5,4,5],'Gbdim':[4,5,4,5],'F#sus2':[4,1,2,2],'Gbsus2':[4,1,2,2],'F#sus4':[4,4,2,2],'Gbsus4':[4,4,2,2],'F#7':[2,3,2,2],'Gb7':[2,3,2,2],'F#m7':[2,2,2,2],'Gbm7':[2,2,2,2],'F#maj7':[3,3,2,2],'Gbmaj7':[3,3,2,2],'F#aug7':[2,3,3,2],'Gbaug7':[2,3,3,2],'F#dim7':[1,2,1,2],'Gbdim7':[1,2,1,2],'F#mMaj7':[4,2,2,1],'GbmMaj7':[4,2,2,1],'F#m7b5':[7,9,7,8],'Gbm7b5':[7,9,7,8],'F#9':[2,1,2,2],'Gb9':[2,1,2,2],'F#maj9':[3,3,2,4],'Gbmaj9':[3,3,2,4],'F#11':[2,4,2,2],'Gb11':[2,4,2,2],'F#m11':[2,2,2,4],'Gbm11':[2,2,2,4],'F#add9':[4,3,2,4],'Gbadd9':[4,3,2,4],
+  'G':[0,0,0,3],'Gm':[5,3,3,3],'Gaug':[5,4,4,3],'Gdim':[5,6,5,6],'Gsus2':[0,0,3,3],'Gsus4':[0,0,1,3],'G7':[0,0,0,1],'Gm7':[3,3,3,3],'Gmaj7':[0,0,0,2],'Gaug7':[1,0,0,1],'Gdim7':[2,3,2,0],'GmMaj7':[0,3,3,2],'Gm7b5':[3,3,2,3],'G9':[3,2,3,3],'Gmaj9':[4,2,3,3],'G11':[3,5,3,3],'Gm11':[3,3,1,3],'Gm13':[2,3,3,3],'Gadd9':[0,2,0,3],
+  'G#':[6,5,4,4],'Ab':[6,5,4,4],'G#m':[6,4,4,4],'Abm':[6,4,4,4],'G#aug':[6,5,5,4],'Abaug':[6,5,5,4],'G#dim':[6,7,6,7],'Abdim':[6,7,6,7],'G#sus2':[6,3,4,4],'Absus2':[6,3,4,4],'G#sus4':[6,6,4,4],'Absus4':[6,6,4,4],'G#7':[4,5,4,4],'Ab7':[4,5,4,4],'G#m7':[4,4,4,4],'Abm7':[4,4,4,4],'G#maj7':[5,5,4,4],'Abmaj7':[5,5,4,4],'G#aug7':[2,1,1,2],'Abaug7':[2,1,1,2],'G#dim7':[0,1,0,1],'Abdim7':[0,1,0,1],'G#mMaj7':[6,4,4,3],'AbmMaj7':[6,4,4,3],'G#m7b5':[4,4,3,2],'Abm7b5':[4,4,3,2],'G#9':[4,3,4,4],'Ab9':[4,3,4,4],'G#maj9':[5,3,4,4],'Abmaj9':[5,3,4,4],'G#11':[4,6,4,4],'Ab11':[4,6,4,4],'G#m11':[4,4,4,4],'Abm11':[4,4,4,4],'G#add9':[1,3,1,4],'Abadd9':[1,3,1,4],
+  'D/G':[5,2,3,2],'D/B':[0,4,3,2],'Dm/B':[0,4,3,1],'E/F':[3,1,0,0],'Gb/E':[2,3,2,2],'Ab/Gb':[4,5,4,4],'Gb/G':[5,3,2,2],'Ab/G':[5,5,4,4],'B/G':[5,4,4,2],'G/A':[7,7,8,7],'Ebdim/Db':[1,2,2,2],'Fdim/Eb':[1,1,0,1],'Em/A':[2,2,0,3],'Gm/E':[2,3,3,3],'Csus4/Bb':[3,3,1,3],'C/Bb':[2,3,1,3]
 };
 
 function getV(name){
@@ -680,12 +681,14 @@ function addToProgression(name){
   const ta=document.getElementById('custom-prog');ta.value=(ta.value.trim()+' '+name).trim();buildCustom();
 }
 
+let _fretSvgId=0;
 function makeFretSVG(frets,name){
   const W=70,NF=5,SX=[13,26,39,52],FY0=27,FS=14,H=FY0+NF*FS+10,sn=['D','G','B','E'];
-  const nz=frets.filter(f=>f!=null&&f>0);const minF=nz.length?Math.min(...nz):0;
-  const startF=minF>1?minF-1:0;const showNut=startF===0;
+  const nz=frets.filter(f=>f!=null&&f>0);const minF=nz.length?Math.min(...nz):0;const maxF=nz.length?Math.max(...nz):0;
+  const startF=maxF>NF?minF-1:0;const showNut=startF===0;
+  const fid='fg'+(_fretSvgId++);
   let s=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="display:block;width:70px;height:auto;" role="img" aria-label="${name} chord diagram">`;
-  s+=`<defs><filter id="g1" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="0.5" stdDeviation="1.2" flood-color="${COL.dot}" flood-opacity="0.55"/></filter></defs>`;
+  s+=`<defs><filter id="${fid}" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="0.5" stdDeviation="1.2" flood-color="${COL.dot}" flood-opacity="0.55"/></filter></defs>`;
   if(startF>0)s+=`<text x="6" y="${FY0+FS-4}" font-family="Nunito,sans-serif" font-size="7" fill="${COL.lbl}" text-anchor="middle">${startF+1}fr</text>`;
   if(showNut)s+=`<rect x="9" y="${FY0-2.5}" width="${SX[3]-SX[0]+8}" height="3" rx="1.2" fill="${COL.nut}"/>`;
   else s+=`<line x1="9" y1="${FY0}" x2="${SX[3]+4}" y2="${FY0}" stroke="${COL.strTop}" stroke-width="1.4"/>`;
@@ -695,7 +698,7 @@ function makeFretSVG(frets,name){
   frets.forEach((f,i)=>{const x=SX[i];
     if(f===null)s+=`<text x="${x}" y="${FY0-4}" font-family="Nunito,sans-serif" font-size="8" fill="${COL.mute}" text-anchor="middle">×</text>`;
     else if(f===0)s+=`<circle cx="${x}" cy="${FY0-7}" r="3.4" fill="none" stroke="${COL.open}" stroke-width="1.3"/>`;
-    else{const af=f-startF;const y=FY0+(af-.5)*FS;s+=`<circle cx="${x}" cy="${y}" r="5.2" fill="${COL.dot}" filter="url(#g1)"/>`;}
+    else{const af=f-startF;const y=FY0+(af-.5)*FS;s+=`<circle cx="${x}" cy="${y}" r="5.2" fill="${COL.dot}" filter="url(#${fid})"/>`;}
   });
   const ff=frets.map((f,i)=>({f,i})).filter(o=>o.f!=null&&o.f>0);
   if(ff.length>=3){const bf=ff[0].f;const same=ff.filter(o=>o.f===bf);
@@ -775,27 +778,35 @@ const VSHIFT={bass:-3,baritone:0,tenor:2};
 function autoFit(){const shift=VSHIFT[S.voice]||0;txSt=(shift+12)%12;updateStBox();if(document.getElementById('tx-in').value.trim())transposeNow();const d=txSt>6?txSt-12:txSt;document.getElementById('tx-info').innerHTML=`Auto-fit to <strong>${S.voice}</strong>. Shifted <strong>${d>=0?'+':''}${d} st</strong>.`;}
 function updateCapoUI(){document.getElementById('capo-n').textContent=S.capo;document.getElementById('capo-lbl').textContent=S.capo===0?'as written':'play shapes '+S.capo+' st lower';}
 function adjustCapo(delta){S.capo=Math.max(0,Math.min(7,S.capo+delta));updateCapoUI();savePrefs();if(document.getElementById('tx-in').value.trim())transposeNow();}
-const CHRE=/\[([A-G][#b]?(?:m(?:aj)?7?|7|dim|aug|sus[24]?|add[29]?|2|4)?)\]/g;
-function txChord(name,st){const m=name.match(/^([A-G][#b]?)(.*)/);if(!m)return name;const[,r,suf]=m;return dispNote(nAt(nIdx(r),st||0))+suf;}
+const QUAL_RE=QUAL_ORDER.filter(Boolean).sort((a,b)=>b.length-a.length).join('|');
+const CHORD_TOKEN_RE=new RegExp('^[A-G][#b]?(?:'+QUAL_RE+')?(?:/[A-G][#b]?)?$');
+const CHRE=new RegExp('\\[([A-G][#b]?(?:'+QUAL_RE+')?(?:/[A-G][#b]?)?)\\]','g');
+function txChord(name,st){
+  const m=name.match(/^([A-G][#b]?)([^\/]*)(?:\/([A-G][#b]?))?$/);if(!m)return name;
+  const[,r,suf,bass]=m;
+  let out=dispNote(nAt(nIdx(r),st||0))+suf;
+  if(bass)out+='/'+dispNote(nAt(nIdx(bass),st||0));
+  return out;
+}
 function isPima(line){return/^[PIMA\s½\d·\-]+$/.test(line.trim())&&line.trim().length>1;}
-function isChordLine(line){const w=line.trim().split(/\s+/).filter(Boolean);if(!w.length)return false;const cc=w.filter(x=>/^[A-G][#b]?(?:m(?:aj)?7?|7|dim|sus[24]?)?$/.test(x)).length;return cc/w.length>0.55;}
+function isChordLine(line){const w=line.trim().split(/\s+/).filter(Boolean);if(!w.length)return false;const cc=w.filter(x=>CHORD_TOKEN_RE.test(x)).length;return cc/w.length>0.55;}
 function transposeNow(){
   const raw=document.getElementById('tx-in').value;if(!raw.trim())return;
   const out=document.getElementById('tx-out');out.innerHTML='';
   const playSt=txSt-S.capo;
   raw.split('\n').forEach(line=>{
     const le=document.createElement('div');
-    if(isPima(line)){const sp=document.createElement('span');sp.className='tx-pima';sp.textContent=line;le.appendChild(sp);}
-    else if(CHRE.test(line)){
+    if(CHRE.test(line)){
       CHRE.lastIndex=0;let last=0,m;
       while((m=CHRE.exec(line))!==null){if(m.index>last)le.appendChild(document.createTextNode(line.slice(last,m.index)));const sp=document.createElement('span');sp.className='tx-chord';const txName=txChord(m[1],playSt);sp.textContent='['+txName+']';sp.onclick=e=>showChordPopup(e,txName);le.appendChild(sp);last=m.index+m[0].length;}
       if(last<line.length)le.appendChild(document.createTextNode(line.slice(last)));
     }else if(isChordLine(line)){
-      line.split(/(\b[A-G][#b]?(?:m(?:aj)?7?|7|dim|sus[24]?)?\b)/g).forEach(part=>{
-        if(/^[A-G][#b]?(?:m(?:aj)?7?|7|dim|sus[24]?)?$/.test(part)){const sp=document.createElement('span');sp.className='tx-chord';const txName=txChord(part,playSt);sp.textContent=txName;sp.onclick=e=>showChordPopup(e,txName);le.appendChild(sp);}
+      line.split(/(\s+)/).forEach(part=>{
+        if(CHORD_TOKEN_RE.test(part)){const sp=document.createElement('span');sp.className='tx-chord';const txName=txChord(part,playSt);sp.textContent=txName;sp.onclick=e=>showChordPopup(e,txName);le.appendChild(sp);}
         else le.appendChild(document.createTextNode(part));
       });
-    }else le.textContent=line;
+    }else if(isPima(line)){const sp=document.createElement('span');sp.className='tx-pima';sp.textContent=line;le.appendChild(sp);}
+    else le.textContent=line;
     out.appendChild(le);
   });
   const d=txSt>6?txSt-12:txSt;
