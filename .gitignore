@@ -21,3 +21,7 @@ Thumbs.db
 
 # Claude Code agent runtime (worktree tracking, session metadata)
 .claude/
+
+# Playwright output
+test-results/
+playwright-report/
