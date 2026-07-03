@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#0B1622"/>
+  <defs>
+    <linearGradient id="waveGrad" x1="102" y1="0" x2="410" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2FB8D4"/>
+      <stop offset="0.32" stop-color="#54D2C0"/>
+      <stop offset="0.56" stop-color="#EBCB5C"/>
+      <stop offset="0.78" stop-color="#EF8434"/>
+      <stop offset="1" stop-color="#E8552D"/>
+    </linearGradient>
+  </defs>
+  <!-- ~10% safe-zone padding (52px each side) for maskable -->
+  <path d="M102 310 C 140 188, 188 122, 222 134 C 248 143, 254 248, 256 258 C 258 268, 266 162, 296 166 C 326 170, 354 210, 410 264" stroke="url(#waveGrad)" stroke-width="40" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>
