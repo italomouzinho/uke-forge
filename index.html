@@ -224,6 +224,34 @@ main{overflow-y:auto;padding:28px 32px;}
   .perf-chords{gap:16px;}
 }
 /* @region:css-android */
+
+/* E2-S1: Touch targets ≥ 44px on mobile */
+@media (max-width: 860px) {
+  /* Key grid buttons — expand to min 44×44 */
+  .kp { min-height: 44px; min-width: 44px; }
+
+  /* Mode segment buttons */
+  .seg { min-height: 44px; }
+
+  /* Chord chips */
+  .chip { min-height: 44px; padding: 12px 10px; }
+
+  /* Nav tabs — padding increase only, no font/border change */
+  .tab { padding: 8px 10px; min-height: 44px; }
+
+  /* Icon buttons (30×30 visual) — ::after expands hit area to 44×44 */
+  .ibtn { position: relative; }
+  .ibtn::after { content: ''; position: absolute; inset: -7px; }
+
+  /* Chord play button (26×26 visual) — ::after expands hit area */
+  .cc-play { position: relative; }
+  .cc-play::after { content: ''; position: absolute; inset: -9px; }
+
+  /* Song card action buttons (26×26 visual) — ::after expands hit area */
+  .song-card-actions button { position: relative; }
+  .song-card-actions button::after { content: ''; position: absolute; inset: -9px; }
+}
+
 /* @endregion */
 </style>
 <!-- @region:head-pwa -->
