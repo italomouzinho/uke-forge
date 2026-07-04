@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Launcher icon background — deep navy -->
+    <color name="ic_launcher_background">#0B1622</color>
+    <!-- Brand palette -->
+    <color name="colorPrimary">#EF8434</color>
+    <color name="colorPrimaryDark">#0B1622</color>
+    <color name="colorAccent">#33C2CE</color>
+</resources>
