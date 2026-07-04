@@ -1,4 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
+import { existsSync } from 'fs';
+
+// Use the pre-installed binary when available (local dev); fall back to
+// Playwright's own download location when running in CI after
+// `npx playwright install chromium --with-deps`.
+const LOCAL_CHROMIUM = '/opt/pw-browsers/chromium';
 
 export default defineConfig({
   testDir: './test/e2e',
@@ -7,9 +13,8 @@ export default defineConfig({
   workers: 1,
   use: {
     baseURL: 'http://localhost:3000',
-    // Chromium pre-installed at /opt/pw-browsers/chromium
     launchOptions: {
-      executablePath: '/opt/pw-browsers/chromium',
+      executablePath: existsSync(LOCAL_CHROMIUM) ? LOCAL_CHROMIUM : undefined,
     },
   },
   webServer: {
